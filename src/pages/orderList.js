@@ -61,16 +61,26 @@ class OrderList extends React.Component {
   render() {
   const {classes} = this.props
     return (
-      <Layout title='Order List' >
+      <div>
         <SEO title="Order List" keywords={[`gatsby`, `application`, `react`]} />
+
 
         <main className={classes.content}>
           <div className={classes.appBarSpacer}/>
+          <Typography
+                component="h1"
+                variant="h6"
+                color="inherit"
+                noWrap
+                className={classes.title}
+          >
+            Order List
+          </Typography>
           <Typography component="div" className={classes.tableContainer}>
             <MyTable columns={this.state.columns} columnWidths={this.state.columnWidths} />
           </Typography>
-    </main>
-  </Layout>)
+        </main>
+  </div>)
   }
 }
 

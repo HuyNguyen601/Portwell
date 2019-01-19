@@ -17,6 +17,8 @@ import {Person} from '@material-ui/icons';
 import { mainListItems, secondaryListItems } from './listItems';
 
 import {styles} from '../utils/styles'
+import {getUser, logout} from '../services/auth'
+import {navigate} from 'gatsby'
 
 
 const drawerWidth = 240;
@@ -36,7 +38,7 @@ class Layout extends React.Component {
   };
 
   render() {
-    const { classes, title} = this.props;
+    const { classes} = this.props;
     return (
       <div className={classes.root}>
         <CssBaseline />
@@ -63,10 +65,11 @@ class Layout extends React.Component {
               noWrap
               className={classes.title}
             >
-            {title}
+            ALS
 
             </Typography>
-            <IconButton color="inherit">
+            {getUser().name}
+            <IconButton color="inherit" onClick={e=>logout(()=>navigate(`/login`))}>
               <Person/>
             </IconButton>
           </Toolbar>

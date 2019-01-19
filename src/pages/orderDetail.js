@@ -9,7 +9,7 @@ import SEO from '../components/seo'
 import MyTable from '../components/MyTable'
 import {styles} from '../utils/styles'
 import OrderInfo from '../components/OrderInfo'
-import StationTable from '../components/StationTable'
+import StationDisplay from '../components/StationDisplay'
 //for xhr
 import axios from 'axios'
 import qs from 'qs'
@@ -73,22 +73,32 @@ class OrderDetail extends React.Component {
     const {classes} = this.props
     const {id,result,order_no} = this.state
     return (
-      <Layout title='Order Detail' >
+      <div>
         <SEO title="Order Detail" keywords={[`gatsby`, `application`, `react`]} />
 
         <main className={classes.content}>
           <div className={classes.appBarSpacer}/>
+          <Typography
+                component="h1"
+                variant="h6"
+                color="inherit"
+                noWrap
+                className={classes.title}
+          >
+            Order Detail
+          </Typography>
           <Paper>
+
             <TextField id="order_no" className={classes.textField} label="Enter Order Number" value={order_no} onChange={this.handleChange('order_no')} margin="normal" variant='outlined' required style={{width: 500}}/>
-            <TextField id="result" className = {classes.textField} value={result} margin="normal" variant='outlined' style={{width: 500}} disabled/>
+            <TextField id="result" className = {classes.textField} label="Result"  value={result} margin="normal" variant='outlined' style={{width: 500}} disabled/>
           </Paper>
           <OrderInfo id = {id} onChange={order_no=>this.setState({order_no})}/>
-          <Typography component="div" className={classes.tableContainer}>
-            {id!==undefined && <StationTable id={id} /> }
-          </Typography>
+          <StationDisplay id={id} orderNo={order_no}/>
+
+
         </main>
 
-    </Layout>)
+    </div>)
   }
 }
 
