@@ -7,12 +7,21 @@ import Layout from '../components/layout'
 import SEO from '../components/seo'
 import MyTable from '../components/MyTable'
 import {styles} from '../utils/styles'
-//firebase
+//axios to handle xmlhttp request
+import axios from 'axios'
+import qs from 'qs'
+import {common_url} from '../config/config'
+
+import {navigate} from 'gatsby'
+
+
 
 class OrderList extends React.Component {
   constructor(props){
     super(props)
     this.state = {
+      rows: [],
+      totalCount: 0,
       columns: [{
         'name': '_id',
         'title': 'ID'
@@ -50,6 +59,41 @@ class OrderList extends React.Component {
         { columnName: 'dmethod', width: 160 }
      ],
     }
+    this.getOrder = async state =>{
+      try{
+        const response = await axios.post(common_url,
+          qs.stringify({
+            id: 'developer',
+            jsonMeta: JSON.stringify({"act":"searchOrderListByOrderNo"}),
+            jsonData: JSON.stringify({"search_text": state.searchValue}),
+            rows: state.pageSize,
+            page: state.currentPage+1,
+            sidx: state.sorting[0].columnName,
+            sord: state.sorting[0].direction
+          }))
+        if(response.data.total>0){
+          this.setState({
+            rows: response.data.rows,
+            totalCount: response.data.total
+          })
+        }
+        else {
+          this.setState({
+            totalCount: 0,
+            rows: []
+          })
+        }
+      } catch (error){
+        console.log(error)
+      }
+    }
+    this.changeSelection = this.changeSelection.bind(this)
+
+  }
+  changeSelection(selection){
+    const lastSelection = selection.slice(-1)
+    const id =this.state.rows[lastSelection]['_id']
+    navigate('/orderDetail',{state: {id: id}})
   }
 
 
@@ -77,7 +121,14 @@ class OrderList extends React.Component {
             Order List
           </Typography>
           <Typography component="div" className={classes.tableContainer}>
-            <MyTable columns={this.state.columns} columnWidths={this.state.columnWidths} />
+            <MyTable
+              columns={this.state.columns}
+              rows={this.state.rows}
+              totalCount={this.state.totalCount}
+              columnWidths={this.state.columnWidths}
+              getData={this.getOrder}
+              onSelectionChange ={this.changeSelection}
+            />
           </Typography>
         </main>
   </div>)

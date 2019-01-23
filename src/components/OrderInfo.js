@@ -58,10 +58,29 @@ export default class OrderInfo extends React.Component{
   componentDidUpdate(prevProps){
     if(prevProps.id !== this.props.id){
       getOrderInfo(this.props.id).then(response=>{
-        const state = response.data.rows[0]
-        state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
-        state.qty_remain = state.qty_order - state.qty_mr
-        this.setState(state)
+        if(response.data.total>0){
+          const state = response.data.rows[0]
+          state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
+          state.qty_remain = state.qty_order - state.qty_mr
+          this.setState(state)
+          this.props.onChange !== undefined && this.props.onChange(state.order_no,state.qty_remain)
+        }
+        else {
+          this.setState({
+            order_no: '',
+            item_no: '',
+            cust_code: '',
+            qty_order: 0,
+            qty_mr: 0,
+            qty_remain: 0
+          })
+        }
+      })
+    }
+    if(prevProps.qtyRemain !== this.props.qtyRemain){
+      this.setState({
+        qty_remain: this.props.qtyRemain,
+        qty_mr: this.state.qty_order - this.props.qtyRemain
       })
     }
   }
@@ -74,7 +93,7 @@ export default class OrderInfo extends React.Component{
         state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
         state.qty_remain = state.qty_order - state.qty_mr
         this.setState(state)
-        this.props.onChange(state.order_no)
+        this.props.onChange !== undefined && this.props.onChange(state.order_no,state.qty_remain)
       }
     })
 
@@ -95,7 +114,7 @@ export default class OrderInfo extends React.Component{
         </TableHead>
         <TableBody>
         {rows.map(row=>(
-          <TableRow key={row.order_id}>
+          <TableRow key={'id_'+row.order_id}>
             {columns.map(column=>(
               <TableCell align="right" key={row.order_id+'_'+column.name}> {row[column.name]}</TableCell>
             ))}

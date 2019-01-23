@@ -12,7 +12,7 @@ import AssignmentIcon from '@material-ui/icons/Assignment';
 import {Link} from 'gatsby'
 
 export const mainListItems = (<div>
-  <Link to='./' style={{textDecoration: 'none'}}>
+  <Link to='/' style={{textDecoration: 'none'}}>
     <ListItem button>
       <ListItemIcon>
         <DashboardIcon/>
@@ -20,7 +20,7 @@ export const mainListItems = (<div>
       <ListItemText primary="Dashboard"/>
     </ListItem>
   </Link>
-  <Link to='./orderList' style={{textDecoration: 'none'}}>
+  <Link to='/orderList' style={{textDecoration: 'none'}}>
     <ListItem button>
       <ListItemIcon>
         <ShoppingCartIcon/>
@@ -28,7 +28,7 @@ export const mainListItems = (<div>
       <ListItemText primary="Order List"/>
     </ListItem>
   </Link>
-  <Link to='./orderDetail' style={{textDecoration: 'none'}}>
+  <Link to='/orderDetail' style={{textDecoration: 'none'}}>
     <ListItem button>
       <ListItemIcon>
         <AssignmentIcon/>
@@ -36,7 +36,7 @@ export const mainListItems = (<div>
       <ListItemText primary="Order Detail"/>
     </ListItem>
   </Link>
-  <Link to='./unit' style={{textDecoration: 'none'}}>
+  <Link to='/unit' style={{textDecoration: 'none'}}>
     <ListItem button>
       <ListItemIcon>
         <Layers/>

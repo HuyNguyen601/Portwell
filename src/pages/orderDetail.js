@@ -33,13 +33,19 @@ class OrderDetail extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      id: this.props.location.state.id,
+      id: this.props.location.state === null ? '' : this.props.location.state.id,
       order_no: '',
+      qty_remain: 0,
       result: 'Result'
     }
     this.handleChange = type=>e=>{
       this.setState({
         [type]: e.target.value
+      })
+    }
+    this.qtyChange = value=>{
+      this.setState({
+        qty_remain: value
       })
     }
     //this.stationChange = this.stationChange.bind(this)
@@ -57,6 +63,7 @@ class OrderDetail extends React.Component {
         }
         else {
           this.setState({
+            id: '',
             result: 'No order found!'
           })
         }
@@ -71,7 +78,7 @@ class OrderDetail extends React.Component {
 
   render() {
     const {classes} = this.props
-    const {id,result,order_no} = this.state
+    const {id,result,order_no,qty_remain} = this.state
     return (
       <div>
         <SEO title="Order Detail" keywords={[`gatsby`, `application`, `react`]} />
@@ -88,12 +95,11 @@ class OrderDetail extends React.Component {
             Order Detail
           </Typography>
           <Paper>
-
-            <TextField id="order_no" className={classes.textField} label="Enter Order Number" value={order_no} onChange={this.handleChange('order_no')} margin="normal" variant='outlined' required style={{width: 500}}/>
+            <TextField id="order_no" className={classes.textField} label="Enter Order Number" value={order_no} onChange={this.handleChange('order_no')} margin="normal" variant='outlined' autocomplete='off' required style={{width: 500}}/>
             <TextField id="result" className = {classes.textField} label="Result"  value={result} margin="normal" variant='outlined' style={{width: 500}} disabled/>
           </Paper>
-          <OrderInfo id = {id} onChange={order_no=>this.setState({order_no})}/>
-          <StationDisplay id={id} orderNo={order_no}/>
+          <OrderInfo id = {id}  qtyRemain={qty_remain} onChange={(order_no,qty_remain)=>this.setState({order_no: order_no,qty_remain: qty_remain})} />
+          <StationDisplay id={id} orderNo={order_no} qtyRemain={qty_remain} onQtyChange = {this.qtyChange}/>
 
 
         </main>

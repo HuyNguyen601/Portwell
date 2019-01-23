@@ -1,6 +1,8 @@
 import React from 'react'
 import {Grid, Table, TableHeaderRow} from '@devexpress/dx-react-grid-material-ui'
 import {Loading} from './loading.js'
+import {Link} from 'gatsby'
+import MyTable from './MyTable'
 
 import axios from 'axios'
 import qs from 'qs'
@@ -67,83 +69,100 @@ const toStation = value => {
   return station
 }
 
-const getBatch = async id => {
-  try {
-    const response = await axios.post(common_url, qs.stringify({
-      id: 'developer',
-      jsonMeta: JSON.stringify({"act": "searchBatchByOrderID"}),
-      jsonData: JSON.stringify({"search_text": id, "search_form": "Material Receiving"})
-    }))
-    return response
-  } catch (error) {
-    console.log(error)
-  }
-}
 
-const getUnitByStation = async (id, station) => {
-  try {
-    const response = await axios.post(common_url, qs.stringify({
-      id: 'developer',
-      jsonMeta: JSON.stringify({"act": "getUnitByStation"}),
-      jsonData: JSON.stringify({"search_text": id, "search_form": station})
-    }))
-    return response
-  } catch (error) {
-    console.log(error)
-  }
-}
-
+//***********STATE IS HERE ******///////////////
 export default class StationTable extends React.Component {
   constructor(props) {
     super(props)
+    this.getBatch = async (state, props) => {
+      try {
+        const response = await axios.post(common_url, qs.stringify({
+          id: 'developer',
+          jsonMeta: JSON.stringify({"act": "searchBatchByOrderID"}),
+          jsonData: JSON.stringify({"search_text": props.id, "search_form": "Material Receiving"})
+        }))
+        const data = response.data
+        if(data.total > 0){
+          this.setState({
+            rows: data.rows,
+            totalCount: data.total
+          })
+        }
+        else {
+          this.setState({
+            rows: [],
+            totalCount: 0
+          })
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
     this.state = {
+      totalCount: 0,
       columns: allColumns,
+      getData: this.getBatch,
       rows: []
+    }
+    this.getUnitByStation = async (state,props) => {
+      try {
+        const response = await axios.post(common_url, qs.stringify({
+          id: 'developer',
+          jsonMeta: JSON.stringify({"act": "getUnitByStation"}),
+          jsonData: JSON.stringify({
+            search_text: props.id,
+            search_form: props.station,
+            rows: state.pageSize,
+            page: state.currentPage+1,
+            sidx: state.sorting[0].columnName,
+            sord: state.sorting[0].direction
+            })
+        }))
+        const data = response.data
+        if(data.total > 0){
+          this.setState({
+            rows: data.rows,
+            totalCount: data.total
+          })
+        }
+        else {
+          this.setState({
+            rows: [],
+            totalCount: 0
+          })
+        }
+      } catch (error) {
+        console.log(error)
+      }
     }
   }
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.value !== this.props.value) {
+    if (prevProps.value !== this.props.value || prevProps.id !== this.props.id) {
       const columns = this.props.value
         ? stationColumns
         : allColumns
       const station = toStation(this.props.value)
       if (this.props.value) {
-        getUnitByStation(this.props.id, station).then(response => {
-          this.props.onLoaded()
-          if (response.data.total > 0) {
-            this.setState({columns: columns, rows: response.data.rows})
-          } else {
-            this.setState({columns: columns, rows: []})
-          }
+        this.setState({
+          getData: this.getUnitByStation
         })
       } else {
-        getBatch(this.props.id).then(response => {
-          if (response.data.total > 0) {
-            this.setState({columns: columns, rows: response.data.rows})
-          }
-          this.props.onLoaded()
+        this.setState({
+          getData: this.getBatch
         })
-
       }
     }
   }
-  componentDidMount() {
-    //Mount state is all stations
-    getBatch(this.props.id).then(response => {
-      if (response.data.total > 0) {
-        this.setState({rows: response.data.rows})
-      }
-      this.props.onLoaded()
-    })
-
-  }
 
   render() {
-    const {columns, rows, value} = this.state
+    const {columns, rows, value, totalCount, getData} = this.state
+    const {id} = this.props
+    const params = {
+      station: toStation(value),
+      id: id
+    }
 
-    return (<Grid columns={columns} rows={rows}>
-      <Table/>
-      <TableHeaderRow/> {this.props.loading && <Loading/>}
-    </Grid>)
+    return (<MyTable columns={columns} rows={rows} getData={getData} params={params}/>)
   }
 }
