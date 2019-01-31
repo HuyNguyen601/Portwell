@@ -18,9 +18,9 @@ export const MyDialog = props=>(<div>
           <Button onClick={props.handleClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={props.handleSubmit} color="primary">
-            Save
-          </Button>
+          {props.handleSubmit !== undefined && <Button onClick={props.handleSubmit} color="primary">
+            Confirm
+          </Button>}
         </DialogActions>
       </Dialog>
     </div>);

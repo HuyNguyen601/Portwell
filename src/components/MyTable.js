@@ -1,7 +1,7 @@
 import React from 'react'
 
 import Paper from '@material-ui/core/Paper'
-import {SortingState, IntegratedSorting, PagingState, CustomPaging, SearchState, RowDetailState, SelectionState} from '@devexpress/dx-react-grid'
+import {SortingState, IntegratedSorting, IntegratedPaging, PagingState, CustomPaging, SearchState, RowDetailState,IntegratedSelection, SelectionState} from '@devexpress/dx-react-grid'
 import {Grid, Table, TableColumnResizing, TableHeaderRow, TableColumnVisibility, PagingPanel, Toolbar, SearchPanel, TableRowDetail, TableSelection} from '@devexpress/dx-react-grid-material-ui'
 
 import {Loading} from './loading.js'
@@ -52,14 +52,37 @@ class MyTable extends React.Component {
     if(sorting !== prevState.sorting
       || currentPage !== prevState.currentPage
       || searchValue !== prevState.searchValue
-      || pageSize !== prevState.pageSize || this.props.params !== prevProps.params){
-        this.props.getData(this.state, this.props.params).then(()=>{
+      || pageSize !== prevState.pageSize){
+        this.props.getData(this.state, this.props).then(()=>{
           this.setState({loading: false})
         })
     }
-    if(prevProps.rows !== this.props.rows){
-
+    if(prevProps.station !== this.props.station){
+      // both stations are not 'ALL' station
+      if(prevProps.station !== 'All' && this.props.station!== 'All'){
+        this.setState({
+          loading: true
+        })
+        const state = this.state
+        state.currentPage = 0 //set to first page when move to another station
+        this.props.getData(state, this.props).then(()=>{
+          this.setState({loading: false})
+        })
+      }
     }
+    if(this.props.id !== prevProps.id
+      || prevProps.getData !== this.props.getData
+      || prevProps.update !== this.props.update){
+        this.setState({
+          loading: true
+        })
+        const state = this.state
+        state.currentPage = 0 //set to first page
+        this.props.getData(state, this.props).then(()=>{
+          this.setState({loading: false})
+        })
+      }
+
   }
 
   componentDidMount() {
@@ -67,7 +90,7 @@ class MyTable extends React.Component {
     this.setState({
       columns: this.props.columns
     })
-    this.props.getData(this.state, this.props.params).then(()=>{
+    this.props.getData(this.state, this.props).then(()=>{
       this.setState({loading: false})
     })
   }
@@ -85,35 +108,44 @@ class MyTable extends React.Component {
       rows,
       columns,
       totalCount,
+      columnWidths,
+      selection,
+      remotePaging
     } = this.props
     return (<Paper style={{
         position: 'relative'
       }}>
       <Grid rows={rows} columns={columns}>
         <SelectionState
-            selection={[]}
+            selection={selection}
             onSelectionChange={this.props.onSelectionChange}
           />
         <PagingState currentPage={currentPage}
           onCurrentPageChange={this.changeCurrentPage}
           pageSize={pageSize}
           onPageSizeChange={this.changePageSize}/>
-        <CustomPaging totalCount={totalCount}/>
+        {remotePaging && <CustomPaging totalCount={totalCount}/>}
+        {!remotePaging && <IntegratedPaging/>}
+
         <SearchState
             onValueChange={this.changeSearchValue}
         />
         <SortingState sorting={sorting} onSortingChange={this.changeSorting}/>
+
         <IntegratedSorting/>
+        <IntegratedSelection/>
         <Table/>
         <TableColumnResizing
-            columnWidths={this.props.columnWidths}
+            columnWidths={columnWidths}
         />
+
         <TableHeaderRow showSortingControls/>
 
         <TableSelection
             selectByRowClick
             highlightRow
-            showSelectionColumn={false}
+            showSelectionColumn
+            showSelectAll
           />
         <TableColumnVisibility
             defaultHiddenColumnNames={['_id']}

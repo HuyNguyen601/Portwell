@@ -1,6 +1,5 @@
 import React from 'react'
 import {Grid, Table, TableHeaderRow} from '@devexpress/dx-react-grid-material-ui'
-import {Loading} from './loading.js'
 import {Link} from 'gatsby'
 import MyTable from './MyTable'
 
@@ -85,6 +84,7 @@ export default class StationTable extends React.Component {
         if(data.total > 0){
           this.setState({
             rows: data.rows,
+            selection: [],
             totalCount: data.total
           })
         }
@@ -98,11 +98,12 @@ export default class StationTable extends React.Component {
         console.log(error)
       }
     }
-
     this.state = {
       totalCount: 0,
+      remotePaging: false,
       columns: allColumns,
       getData: this.getBatch,
+      selection: [],
       rows: []
     }
     this.getUnitByStation = async (state,props) => {
@@ -121,8 +122,12 @@ export default class StationTable extends React.Component {
         }))
         const data = response.data
         if(data.total > 0){
+          const rows = data.rows
+          rows.forEach(row=>{
+            row.apt_id = <Link to='/unit' state={{uid: row.apt_id}}>{row.apt_id}</Link>
+          })
           this.setState({
-            rows: data.rows,
+            rows: rows,
             totalCount: data.total
           })
         }
@@ -136,19 +141,36 @@ export default class StationTable extends React.Component {
         console.log(error)
       }
     }
+    this.changeSelection = selection =>{
+      this.setState({selection})
+      const ids = []
+      selection.forEach(s=>{
+        ids.push(this.state.rows[s].batch_id)
+      })
+      this.props.getDeleteIds(ids)
+    }
   }
+
+
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.value !== this.props.value || prevProps.id !== this.props.id) {
+    if (prevProps.value !== this.props.value
+        || prevProps.id !== this.props.id) {
       const columns = this.props.value
         ? stationColumns
         : allColumns
       const station = toStation(this.props.value)
-      if (this.props.value) {
+      if (this.props.value) {//seperate stations
         this.setState({
+          columns: columns,
+          selection: [],
+          remotePaging: true,
           getData: this.getUnitByStation
         })
-      } else {
+      } else { //all stations
         this.setState({
+          columns: columns,
+          selection: [],
+          remotePaging: false,
           getData: this.getBatch
         })
       }
@@ -156,13 +178,14 @@ export default class StationTable extends React.Component {
   }
 
   render() {
-    const {columns, rows, value, totalCount, getData} = this.state
-    const {id} = this.props
-    const params = {
-      station: toStation(value),
-      id: id
-    }
-
-    return (<MyTable columns={columns} rows={rows} getData={getData} params={params}/>)
+    const {columns, rows, totalCount, getData, remotePaging, selection} = this.state
+    const {id, value, onSelectionChange, update} = this.props
+    return (<MyTable columns={columns} rows={rows} totalCount={totalCount}
+              getData={getData} id={id} station={toStation(value)}
+              selection={selection}
+              onSelectionChange={this.changeSelection}
+              remotePaging={remotePaging}
+              update={update}
+            />)
   }
 }

@@ -51,13 +51,13 @@ const styles = theme => ({
   },
 });
 
-const getStationQty = async order_no =>{
+const getStationQty = async order_id =>{
   try{
     const response = await axios.post(common_url,
       qs.stringify({
         id: 'developer',
-        jsonMeta: JSON.stringify({"act":"searchOrderSummary"}),
-        jsonData: JSON.stringify({"search_text": order_no}),
+        jsonMeta: JSON.stringify({"act":"getStationQty"}),
+        jsonData: JSON.stringify({"search_text": order_id}),
       }))
     return response
   } catch (error){
@@ -77,12 +77,32 @@ const generateBatch = async (order_id, qty)=>{
     console.log(error)
   }
 }
+
+const deleteBatch = async ids=>{
+  try{
+    const response = await axios.post(admin_url,
+      qs.stringify({
+        id: 'developer',
+        jsonMeta: JSON.stringify({"act":"deleteBatchByBatchID"}),
+        jsonData: JSON.stringify({"search_text": ids}),
+      }))
+    return response
+  } catch (error){
+    console.log(error)
+  }
+}
+
+//**** STATE IS HERE ****///////
 class StationDisplay extends React.Component {
 
   constructor(props) {
     super(props)
     this.state = {
       generate: false, //for new - generate batch dialog
+      deleteDialog: false, //for delete dialog
+      infoDialog: false, // for general dialogs
+      message: '', //dialog message
+      update: true, //used to rerender the table
       value: 0,
       all: 0, //all stations
       mr: 0, //Material Receiving qty
@@ -91,13 +111,14 @@ class StationDisplay extends React.Component {
       pk: 0, //packing qty
       uid: '',
       newQty: 0,
-      loading: true,
+      deleteIds: [],
       rows: []
     }
     this.handleChange = this.handleChange.bind(this)
     this.handleInput = this.handleInput.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
-    this.handleLoading = ()=>this.setState({loading: false})
+    this.getDeleteIds = deleteIds=>this.setState({deleteIds})
+    this.handleDelete = this.handleDelete.bind(this)
 
     //this function to close dialog, used for all types
     this.handleClose = type=> e=>{
@@ -106,6 +127,31 @@ class StationDisplay extends React.Component {
       })
     }
   }
+  handleDelete = ()=>{
+    this.setState({
+      deleteDialog: false
+    })
+    const ids = this.state.deleteIds
+    deleteBatch(ids).then(response=>{
+      let message = ''
+      let qty = 0
+      response.data.rtn.forEach(r=>{
+        qty += r.result === 'deleteBatch_success'
+          ? r.total : 0
+        message += r.result === 'deleteBatch_success'
+          ? 'Successfully deleted batch '+r._id +"!\n"
+          : 'Failed to delete batch '+r._id +"!\n"
+      })
+      this.setState({
+        message: message,
+        infoDialog: true,
+        all: this.state.all - qty,
+        mr: this.state.mr - qty,
+        update: !this.state.update
+      })
+      this.props.onQtyChange(this.props.qtyRemain + qty)
+    })
+  }
   handleSubmit = ()=>{
     generateBatch(this.props.id, this.state.newQty).then(response=>{
       if(response.data.total > 0){
@@ -113,7 +159,8 @@ class StationDisplay extends React.Component {
           newQty: 0,
           generate: false,
           mr: this.state.mr + response.data.total,
-          loading: true
+          all: this.state.all+response.data.total,
+          update: !this.state.update
         })
         this.props.onQtyChange(this.props.qtyRemain - response.data.total)
       }
@@ -124,13 +171,12 @@ class StationDisplay extends React.Component {
   handleChange = (event, value)=>{
     if(value !== this.state.value){
       this.setState({
-        value: value,
-        loading: true
+        value: value
       })
     }
   }
   handleInput = type=> event=>{
-    if(type==='newQty' && event.target.value >= this.props.qtyRemain)
+    if(type==='newQty' && event.target.value > this.props.qtyRemain)
       return
     this.setState({
       [type]: event.target.value
@@ -139,17 +185,35 @@ class StationDisplay extends React.Component {
 
 
   componentDidUpdate(prevProps, prevState){
-    if(prevProps.orderNo !== this.props.orderNo){
-      getStationQty(this.props.orderNo).then(response=>{
+    if(prevProps.id !== this.props.id){
+      getStationQty(this.props.id).then(response=>{
         if(response.data.total > 0){
-          const row = response.data.rows[0]
-          this.setState({
-            all: row.qty_order,
-            mr: row.MAR,
-            bi: row.BUR,
-            as: row.ASM,
-            pk: row.PAK
+          const rows = response.data.rows
+          const temp = {
+            mr: 0,
+            bi: 0,
+            as: 0,
+            pk: 0
+          }
+          rows.forEach(row=>{
+            switch(row.station){
+              case 'Material R':
+                temp.mr = row.qty
+                break
+              case 'Assembly':
+                temp.as = row.qty
+                break
+              case 'Burn In':
+                temp.bi = row.qty
+                break
+              case 'Packing':
+                temp.pk = row.qty
+                break
+              default: break
+            }
           })
+          temp.all = temp.as + temp.bi + temp.mr + temp.pk
+          this.setState(temp)
         }
         else {
           this.setState({
@@ -168,10 +232,50 @@ class StationDisplay extends React.Component {
 
 
   componentDidMount() {
+    getStationQty(this.props.id).then(response=>{
+      if(response.data.total > 0){
+        const rows = response.data.rows
+        const temp = {
+          mr: 0,
+          bi: 0,
+          as: 0,
+          pk: 0
+        }
+        rows.forEach(row=>{
+          switch(row.station){
+            case 'Material R':
+              temp.mr = row.qty
+              break
+            case 'Assembly':
+              temp.as = row.qty
+              break
+            case 'Burn In':
+              temp.bi = row.qty
+              break
+            case 'Packing':
+              temp.pk = row.qty
+              break
+            default: break
+          }
+        })
+        temp.all = temp.as + temp.bi + temp.mr + temp.pk
+        this.setState(temp)
+      }
+      else {
+        this.setState({
+          all: 0,
+          mr: 0,
+          bi: 0,
+          as: 0,
+          pk: 0,
+          uid: ''
+        })
+      }
+    })
   }
 
   render() {
-    const {rows, loading, value, all, mr, as, bi, pk, uid, generate, newQty} = this.state
+    const {rows, value, all, mr, as, bi, pk, uid, generate, newQty, deleteIds, deleteDialog, infoDialog, message, update} = this.state
     const {classes, id, order_no, qtyRemain} = this.props
     return (<Paper>
       <Tabs value={value} variant='fullWidth' indicatorColor="primary" textColor="primary" onChange={this.handleChange}>
@@ -200,31 +304,41 @@ class StationDisplay extends React.Component {
       </Tabs>
       {/*each station has each own buttons*/}
       { value === 0 && //All station buttons
-        <Fab color='secondary' aria-label='Delete' className={classes.fab} disabled>
-          <DeleteIcon />
-        </Fab>
+        <div>
+          <Fab color="primary" aria-label="Add" onClick={e=>this.setState({generate: true})} className={classes.fab} disabled={!qtyRemain}>
+            <AddIcon />
+          </Fab>
+          <Fab color='secondary' aria-label='Delete' onClick={e=>this.setState({deleteDialog:true})} className={classes.fab} disabled={deleteIds.length===0}>
+            <DeleteIcon />
+          </Fab>
+        </div>
       }
       { (value !== 1 && value !== 0) && //Any station but All and MR
         <TextField id="action_input" className={classes.textField} label="Enter UID" value={uid} onChange={this.handleInput} margin="normal" variant='outlined' required style={{width: 500}}/>
       }
       { value === 1 && //MR station only
       <div>
-        <Fab color="primary" aria-label="Add" onClick={e=>this.setState({generate: true})} className={classes.fab} disabled={!qtyRemain}>
-          <AddIcon />
-        </Fab>
-        <Button variant = 'contained' className={classes.button}>
+        <Button variant = 'contained' className={classes.button} disabled>
           <Print className ={classes.leftIcon} />
           Small Label
         </Button>
-        <Button variant = 'contained' className={classes.button}>
+        <Button variant = 'contained' className={classes.button} disabled>
           <Print className ={classes.leftIcon} />
           Large Label
         </Button>
       </div>
       }
-      <StationTable value={value} id={id} loading={this.state.loading} onLoaded={this.handleLoading}/>
+      <StationTable value={value} id={id} getDeleteIds={this.getDeleteIds} update={update}/>
       <MyDialog title='Generate Batch' open={generate} handleClose={this.handleClose('generate')} handleSubmit={this.handleSubmit}>
         <TextField id="batch_qty" className={classes.textField} label="Qty" value={newQty} onChange={this.handleInput('newQty')} margin="normal" variant='outlined' required style={{width: 500}}/>
+      </MyDialog>
+      <MyDialog title='Confirm Delete' open={deleteDialog} handleClose={this.handleClose('deleteDialog')} handleSubmit={this.handleDelete}>
+        Are you sure you want to delete these record(s)?
+      </MyDialog>
+      <MyDialog title='Info Dialog' open={infoDialog} handleClose={this.handleClose('infoDialog')}>
+        {message.split("\n").map((m,key)=>
+          <div key={key}>{m}</div>
+        )}
       </MyDialog>
     </Paper>)
   }

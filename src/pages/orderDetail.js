@@ -48,26 +48,30 @@ class OrderDetail extends React.Component {
         qty_remain: value
       })
     }
-    //this.stationChange = this.stationChange.bind(this)
-    //this.openOrder = this.openOrder.bind(this)
-    //this.orderChange = this.orderChange.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
   }
+
+  handleSubmit = e=>{
+    e.preventDefault()
+    getOrderId(this.state.order_no).then(response=>{
+      if(response.data.total>0){
+        this.setState({
+          id: response.data.rows[0].order_id,
+          result: 'Found '+response.data.total +' order id.'
+        })
+      }
+      else {
+        this.setState({
+          id: '',
+          result: 'No order found!'
+        })
+      }
+    })
+  }
+
   componentDidUpdate(prevProps, prevState){
     if(prevState.order_no !== this.state.order_no){
-      getOrderId(this.state.order_no).then(response=>{
-        if(response.data.total>0){
-          this.setState({
-            id: response.data.rows[0].order_id,
-            result: 'Found '+response.data.total +' order id.'
-          })
-        }
-        else {
-          this.setState({
-            id: '',
-            result: 'No order found!'
-          })
-        }
-      })
+
     }
   }
 
@@ -95,15 +99,17 @@ class OrderDetail extends React.Component {
             Order Detail
           </Typography>
           <Paper>
-            <TextField id="order_no" className={classes.textField} label="Enter Order Number" value={order_no} onChange={this.handleChange('order_no')} margin="normal" variant='outlined' autocomplete='off' required style={{width: 500}}/>
-            <TextField id="result" className = {classes.textField} label="Result"  value={result} margin="normal" variant='outlined' style={{width: 500}} disabled/>
+            <form onSubmit={this.handleSubmit}>
+              <TextField id="order_no" className={classes.textField} label="Enter Order Number" value={order_no}
+                onChange={this.handleChange('order_no')} margin="normal"
+                variant='outlined' autoComplete='off' required style={{width: 500}}
+              />
+            </form>
+
           </Paper>
           <OrderInfo id = {id}  qtyRemain={qty_remain} onChange={(order_no,qty_remain)=>this.setState({order_no: order_no,qty_remain: qty_remain})} />
-          <StationDisplay id={id} orderNo={order_no} qtyRemain={qty_remain} onQtyChange = {this.qtyChange}/>
-
-
+          <StationDisplay id={id} qtyRemain={qty_remain} onQtyChange = {this.qtyChange}/>
         </main>
-
     </div>)
   }
 }

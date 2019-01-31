@@ -12,7 +12,7 @@ import axios from 'axios'
 import qs from 'qs'
 import {common_url} from '../config/config'
 
-import {navigate} from 'gatsby'
+import {Link} from 'gatsby'
 
 
 
@@ -72,8 +72,12 @@ class OrderList extends React.Component {
             sord: state.sorting[0].direction
           }))
         if(response.data.total>0){
+          const rows = response.data.rows
+          rows.forEach(row=>{
+            row.order_no = <Link to='/orderDetail' state={{id: row._id}}> {row.order_no}</Link>
+          })
           this.setState({
-            rows: response.data.rows,
+            rows: rows,
             totalCount: response.data.total
           })
         }
@@ -91,9 +95,7 @@ class OrderList extends React.Component {
 
   }
   changeSelection(selection){
-    const lastSelection = selection.slice(-1)
-    const id =this.state.rows[lastSelection]['_id']
-    navigate('/orderDetail',{state: {id: id}})
+    this.setState({selection})
   }
 
 
@@ -128,6 +130,7 @@ class OrderList extends React.Component {
               columnWidths={this.state.columnWidths}
               getData={this.getOrder}
               onSelectionChange ={this.changeSelection}
+              remotePaging
             />
           </Typography>
         </main>
