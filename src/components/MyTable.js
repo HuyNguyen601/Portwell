@@ -87,9 +87,6 @@ class MyTable extends React.Component {
 
   componentDidMount() {
     const {sorting, currentPage, pageSize,searchValue} = this.state
-    this.setState({
-      columns: this.props.columns
-    })
     this.props.getData(this.state, this.props).then(()=>{
       this.setState({loading: false})
     })

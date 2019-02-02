@@ -55,18 +55,7 @@ const stationColumns = [
     title: 'Exit Reason'
   }
 ]
-const toStation = value => {
-  const station = value === 0
-    ? 'All'
-    : value === 1
-      ? 'Material R' //this because database only hold 10 varchar
-      : value === 2
-        ? 'Assembly'
-        : value === 3
-          ? 'Burn In'
-          : 'Packing'
-  return station
-}
+
 
 
 //***********STATE IS HERE ******///////////////
@@ -153,13 +142,14 @@ export default class StationTable extends React.Component {
 
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.value !== this.props.value
+    if (prevProps.station !== this.props.station
         || prevProps.id !== this.props.id) {
-      const columns = this.props.value
+
+      const station = this.props.station
+      const columns = station !== 'All'
         ? stationColumns
         : allColumns
-      const station = toStation(this.props.value)
-      if (this.props.value) {//seperate stations
+      if (station !== 'All') {//seperate stations
         this.setState({
           columns: columns,
           selection: [],
@@ -179,9 +169,9 @@ export default class StationTable extends React.Component {
 
   render() {
     const {columns, rows, totalCount, getData, remotePaging, selection} = this.state
-    const {id, value, onSelectionChange, update} = this.props
+    const {id, station, onSelectionChange, update} = this.props
     return (<MyTable columns={columns} rows={rows} totalCount={totalCount}
-              getData={getData} id={id} station={toStation(value)}
+              getData={getData} id={id} station={station}
               selection={selection}
               onSelectionChange={this.changeSelection}
               remotePaging={remotePaging}

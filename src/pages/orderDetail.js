@@ -15,6 +15,22 @@ import axios from 'axios'
 import qs from 'qs'
 import {common_url} from '../config/config'
 
+const getOrderInfo = async id=>{
+  try{
+    const response = await axios.post(common_url,
+      qs.stringify({
+        id: 'developer',
+        jsonMeta: JSON.stringify({"act":"searchOrderByID"}),
+        jsonData: JSON.stringify({"search_text": id,"search_form":"Material Receiving"}),
+      }))
+    return response
+  } catch (error){
+    console.log(error)
+  }
+}
+/*
+
+  */
 const getOrderId = async order_no =>{
   try{
     const response = await axios.post(common_url,
@@ -36,19 +52,22 @@ class OrderDetail extends React.Component {
       id: this.props.location.state === null ? '' : this.props.location.state.id,
       order_no: '',
       qty_remain: 0,
-      result: 'Result'
+      qty_mr: 0,
+      qty_order: 0,
+      cust_code: '',
+      item_no: '',
+      result: 'Result',
+      updateAction: false, //toggle to update child components, when add or update actions in stations
+      updateQty: false //toggle to update Qty info, when generate or delete batch
     }
     this.handleChange = type=>e=>{
       this.setState({
         [type]: e.target.value
       })
     }
-    this.qtyChange = value=>{
-      this.setState({
-        qty_remain: value
-      })
-    }
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.handleOrderId = value=>this.setState({id: value, updateAction: !this.state.updateAction})
+    this.handleUpdate = ()=>this.setState({updateQty: !this.state.updateQty})
   }
 
   handleSubmit = e=>{
@@ -70,19 +89,63 @@ class OrderDetail extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState){
-    if(prevState.order_no !== this.state.order_no){
-
+    const {id, updateQty} = this.state
+    console.log(updateQty, prevState.updateQty)
+    if(prevState.id !== id || prevState.updateQty !== updateQty){
+      getOrderInfo(id).then(response=>{
+        if(response.data.total>0){
+          const state = response.data.rows[0]
+          state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
+          state.qty_remain = state.qty_order - state.qty_mr
+          this.setState(state)
+        }
+        else {
+          this.setState({
+            item_no: '',
+            cust_code: '',
+            qty_order: 0,
+            qty_mr: 0,
+            qty_remain: 0
+          })
+        }
+      })
     }
   }
 
   componentDidMount(){
-
-
+    const {id} = this.state
+    if(id !== ''){
+      getOrderInfo(id).then(response=>{
+        if(response.data.total>0){
+          const state = response.data.rows[0]
+          state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
+          state.qty_remain = state.qty_order - state.qty_mr
+          this.setState(state)
+        }
+        else {
+          this.setState({
+            item_no: '',
+            cust_code: '',
+            qty_order: 0,
+            qty_mr: 0,
+            qty_remain: 0
+          })
+        }
+      })
+    }
   }
 
   render() {
     const {classes} = this.props
-    const {id,result,order_no,qty_remain} = this.state
+    const {id,result,order_no,qty_remain, qty_mr, qty_order, cust_code, item_no, updateQty, updateAction} = this.state
+    const row = {
+      order_no: order_no,
+      item_no: item_no,
+      cust_code: cust_code,
+      qty_order: qty_order,
+      qty_mr: qty_mr,
+      qty_remain: qty_remain
+    }
     return (
       <div>
         <SEO title="Order Detail" keywords={[`gatsby`, `application`, `react`]} />
@@ -107,8 +170,8 @@ class OrderDetail extends React.Component {
             </form>
 
           </Paper>
-          <OrderInfo id = {id}  qtyRemain={qty_remain} onChange={(order_no,qty_remain)=>this.setState({order_no: order_no,qty_remain: qty_remain})} />
-          <StationDisplay id={id} qtyRemain={qty_remain} onQtyChange = {this.qtyChange}/>
+          <OrderInfo row={row} />
+          <StationDisplay id={id} qtyRemain={qty_remain} handleOrderId={this.handleOrderId} updateQty={updateQty} handleUpdate={this.handleUpdate} updateAction={updateAction}/>
         </main>
     </div>)
   }

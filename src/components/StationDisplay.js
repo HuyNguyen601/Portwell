@@ -13,7 +13,8 @@ import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Button from '@material-ui/core/Button';
 
-import {MyDialog} from '../components/MyDialog'
+import {MyDialog} from './MyDialog'
+import ActionManagement from './ActionManagement'
 
 
 import axios from 'axios'
@@ -50,6 +51,19 @@ const styles = theme => ({
     marginLeft: theme.spacing.unit,
   },
 });
+
+const toStation = value => {
+  const station = value === 0
+    ? 'All'
+    : value === 1
+      ? 'Material R' //this because database only hold 10 varchar
+      : value === 2
+        ? 'Assembly'
+        : value === 3
+          ? 'Burn In'
+          : 'Packing'
+  return station
+}
 
 const getStationQty = async order_id =>{
   try{
@@ -102,7 +116,6 @@ class StationDisplay extends React.Component {
       deleteDialog: false, //for delete dialog
       infoDialog: false, // for general dialogs
       message: '', //dialog message
-      update: true, //used to rerender the table
       value: 0,
       all: 0, //all stations
       mr: 0, //Material Receiving qty
@@ -147,9 +160,9 @@ class StationDisplay extends React.Component {
         infoDialog: true,
         all: this.state.all - qty,
         mr: this.state.mr - qty,
-        update: !this.state.update
+        //update: !this.state.update
       })
-      this.props.onQtyChange(this.props.qtyRemain + qty)
+      this.props.handleUpdate()
     })
   }
   handleSubmit = ()=>{
@@ -160,11 +173,11 @@ class StationDisplay extends React.Component {
           generate: false,
           mr: this.state.mr + response.data.total,
           all: this.state.all+response.data.total,
-          update: !this.state.update
+        //  update: !this.state.update
         })
-        this.props.onQtyChange(this.props.qtyRemain - response.data.total)
+        //force update table,
+        this.props.handleUpdate()
       }
-
     })
   }
 
@@ -184,9 +197,9 @@ class StationDisplay extends React.Component {
   }
 
 
-  componentDidUpdate(prevProps, prevState){
-    if(prevProps.id !== this.props.id){
-      getStationQty(this.props.id).then(response=>{
+  componentWillReceiveProps(props){
+    if(props.id !== this.props.id || props.updateAction !== this.props.updateAction){
+      getStationQty(props.id).then(response=>{
         if(response.data.total > 0){
           const rows = response.data.rows
           const temp = {
@@ -227,11 +240,11 @@ class StationDisplay extends React.Component {
         }
       })
     }
-
   }
 
 
   componentDidMount() {
+    if(this.props.id !== ''){
     getStationQty(this.props.id).then(response=>{
       if(response.data.total > 0){
         const rows = response.data.rows
@@ -273,10 +286,11 @@ class StationDisplay extends React.Component {
       }
     })
   }
+  }
 
   render() {
-    const {rows, value, all, mr, as, bi, pk, uid, generate, newQty, deleteIds, deleteDialog, infoDialog, message, update} = this.state
-    const {classes, id, order_no, qtyRemain} = this.props
+    const {rows, value, all, mr, as, bi, pk, uid, generate, newQty, deleteIds, deleteDialog, infoDialog, message} = this.state
+    const {classes, id, order_no, qtyRemain, updateQty} = this.props
     return (<Paper>
       <Tabs value={value} variant='fullWidth' indicatorColor="primary" textColor="primary" onChange={this.handleChange}>
         <Tab label={
@@ -311,24 +325,21 @@ class StationDisplay extends React.Component {
           <Fab color='secondary' aria-label='Delete' onClick={e=>this.setState({deleteDialog:true})} className={classes.fab} disabled={deleteIds.length===0}>
             <DeleteIcon />
           </Fab>
+          <Button variant = 'contained' className={classes.button} disabled>
+            <Print className ={classes.leftIcon} />
+            Small Label
+          </Button>
+          <Button variant = 'contained' className={classes.button} disabled>
+            <Print className ={classes.leftIcon} />
+            Large Label
+          </Button>
         </div>
       }
       { (value !== 1 && value !== 0) && //Any station but All and MR
-        <TextField id="action_input" className={classes.textField} label="Enter UID" value={uid} onChange={this.handleInput} margin="normal" variant='outlined' required style={{width: 500}}/>
+        <ActionManagement station={toStation(value)} id={id} handleOrderId={this.props.handleOrderId}/>
       }
-      { value === 1 && //MR station only
-      <div>
-        <Button variant = 'contained' className={classes.button} disabled>
-          <Print className ={classes.leftIcon} />
-          Small Label
-        </Button>
-        <Button variant = 'contained' className={classes.button} disabled>
-          <Print className ={classes.leftIcon} />
-          Large Label
-        </Button>
-      </div>
-      }
-      <StationTable value={value} id={id} getDeleteIds={this.getDeleteIds} update={update}/>
+
+      <StationTable station={toStation(value)} id={id} getDeleteIds={this.getDeleteIds} update={updateQty}/>
       <MyDialog title='Generate Batch' open={generate} handleClose={this.handleClose('generate')} handleSubmit={this.handleSubmit}>
         <TextField id="batch_qty" className={classes.textField} label="Qty" value={newQty} onChange={this.handleInput('newQty')} margin="normal" variant='outlined' required style={{width: 500}}/>
       </MyDialog>
