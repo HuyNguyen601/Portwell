@@ -79,7 +79,6 @@ class ActionManagement extends React.Component {
         const station = data.rows[0].station
         const status = data.rows[0].status
         this.order_id = data.rows[0].order_id
-        this.props.handleOrderId(this.order_id)
         if (station.trim() !== this.props.station && !status.includes('Completed')) {
           //Not completed, stuck in another station
           this.setState({

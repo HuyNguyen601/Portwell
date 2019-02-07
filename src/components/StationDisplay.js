@@ -125,6 +125,7 @@ class StationDisplay extends React.Component {
       uid: '',
       newQty: 0,
       deleteIds: [],
+      update: false, //to update child components
       rows: []
     }
     this.handleChange = this.handleChange.bind(this)
@@ -198,7 +199,7 @@ class StationDisplay extends React.Component {
 
 
   componentWillReceiveProps(props){
-    if(props.id !== this.props.id || props.updateAction !== this.props.updateAction){
+    if(props.id !== this.props.id || props.updateAction !== this.props.updateAction || props.updateQty !== this.props.updateQty){
       getStationQty(props.id).then(response=>{
         if(response.data.total > 0){
           const rows = response.data.rows
@@ -226,6 +227,7 @@ class StationDisplay extends React.Component {
             }
           })
           temp.all = temp.as + temp.bi + temp.mr + temp.pk
+          temp.update = !this.state.update
           this.setState(temp)
         }
         else {
@@ -235,7 +237,8 @@ class StationDisplay extends React.Component {
             bi: 0,
             as: 0,
             pk: 0,
-            uid: ''
+            uid: '',
+            update: !this.state.update
           })
         }
       })
@@ -289,8 +292,8 @@ class StationDisplay extends React.Component {
   }
 
   render() {
-    const {rows, value, all, mr, as, bi, pk, uid, generate, newQty, deleteIds, deleteDialog, infoDialog, message} = this.state
-    const {classes, id, order_no, qtyRemain, updateQty} = this.props
+    const {rows, value, all, mr, as, bi, pk, uid, generate, newQty, deleteIds, deleteDialog, infoDialog, message, update} = this.state
+    const {classes, id, order_no, qtyRemain} = this.props
     return (<Paper>
       <Tabs value={value} variant='fullWidth' indicatorColor="primary" textColor="primary" onChange={this.handleChange}>
         <Tab label={
@@ -339,7 +342,7 @@ class StationDisplay extends React.Component {
         <ActionManagement station={toStation(value)} id={id} handleOrderId={this.props.handleOrderId}/>
       }
 
-      <StationTable station={toStation(value)} id={id} getDeleteIds={this.getDeleteIds} update={updateQty}/>
+      <StationTable station={toStation(value)} id={id} getDeleteIds={this.getDeleteIds} update={update}/>
       <MyDialog title='Generate Batch' open={generate} handleClose={this.handleClose('generate')} handleSubmit={this.handleSubmit}>
         <TextField id="batch_qty" className={classes.textField} label="Qty" value={newQty} onChange={this.handleInput('newQty')} margin="normal" variant='outlined' required style={{width: 500}}/>
       </MyDialog>

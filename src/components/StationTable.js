@@ -90,6 +90,7 @@ export default class StationTable extends React.Component {
     this.state = {
       totalCount: 0,
       remotePaging: false,
+      update: false,
       columns: allColumns,
       getData: this.getBatch,
       selection: [],
@@ -139,6 +140,7 @@ export default class StationTable extends React.Component {
       this.props.getDeleteIds(ids)
     }
   }
+
 
 
   componentDidUpdate(prevProps, prevState) {

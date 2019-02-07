@@ -49,14 +49,14 @@ class OrderDetail extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      id: this.props.location.state === null ? '' : this.props.location.state.id,
+      id: !!this.props.location.state ? this.props.location.state.id :'',
       order_no: '',
+      orderNo: '', // this for order info
       qty_remain: 0,
       qty_mr: 0,
       qty_order: 0,
       cust_code: '',
       item_no: '',
-      result: 'Result',
       updateAction: false, //toggle to update child components, when add or update actions in stations
       updateQty: false //toggle to update Qty info, when generate or delete batch
     }
@@ -76,13 +76,11 @@ class OrderDetail extends React.Component {
       if(response.data.total>0){
         this.setState({
           id: response.data.rows[0].order_id,
-          result: 'Found '+response.data.total +' order id.'
         })
       }
       else {
         this.setState({
           id: '',
-          result: 'No order found!'
         })
       }
     })
@@ -90,17 +88,18 @@ class OrderDetail extends React.Component {
 
   componentDidUpdate(prevProps, prevState){
     const {id, updateQty} = this.state
-    console.log(updateQty, prevState.updateQty)
     if(prevState.id !== id || prevState.updateQty !== updateQty){
       getOrderInfo(id).then(response=>{
         if(response.data.total>0){
           const state = response.data.rows[0]
           state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
           state.qty_remain = state.qty_order - state.qty_mr
+          state.orderNo = state.order_no
           this.setState(state)
         }
         else {
           this.setState({
+            orderNo: '',
             item_no: '',
             cust_code: '',
             qty_order: 0,
@@ -120,10 +119,12 @@ class OrderDetail extends React.Component {
           const state = response.data.rows[0]
           state.qty_mr = state.qty_mr === null ? 0 : state.qty_mr
           state.qty_remain = state.qty_order - state.qty_mr
+          state.orderNo = state.order_no
           this.setState(state)
         }
         else {
           this.setState({
+            orderNo: '',
             item_no: '',
             cust_code: '',
             qty_order: 0,
@@ -137,9 +138,9 @@ class OrderDetail extends React.Component {
 
   render() {
     const {classes} = this.props
-    const {id,result,order_no,qty_remain, qty_mr, qty_order, cust_code, item_no, updateQty, updateAction} = this.state
+    const {id, order_no, qty_remain, qty_mr, qty_order, cust_code, item_no, updateQty, updateAction, orderNo} = this.state
     const row = {
-      order_no: order_no,
+      order_no: orderNo,
       item_no: item_no,
       cust_code: cust_code,
       qty_order: qty_order,

@@ -45,7 +45,7 @@ const columns = [
   }
 ]
 
-const getUnitHistory = async uid =>{
+const getUnitHistory = async uid => {
   try {
     const response = await axios.post(common_url, qs.stringify({
       id: 'developer',
@@ -58,89 +58,137 @@ const getUnitHistory = async uid =>{
   }
 }
 
+const getOrderInfo = async id => {
+  try {
+    const response = await axios.post(common_url, qs.stringify({
+      id: 'developer',
+      jsonMeta: JSON.stringify({"act": "searchOrderByID"}),
+      jsonData: JSON.stringify({"search_text": id, "search_form": "Material Receiving"})
+    }))
+    return response
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 class Unit extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      uid: this.props.location.state === undefined ? '' : this.props.location.state.uid,
-      result: 'Cannot find any actions!',
+      uid: !!this.props.location.state
+        ? this.props.location.state.uid
+        : '',
       order_id: '',
       order_no: '',
+      item_no: '',
+      cust_code: '',
+      qty_order: '',
+      qty_mr: '',
+      qty_remain: '',
       rows: []
     }
-    this.handleChange = type => e =>{
-      this.setState ({
-        [type]: e.target.value
-      })
+    this.handleChange = type => e => {
+      this.setState({[type]: e.target.value})
     }
+    this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  componentDidUpdate(prevProps, prevState){
-    if(prevState.uid !== this.state.uid){
-      getUnitHistory(this.state.uid).then(response=>{
-        if(response.data.total>0){
-          const rows = response.data.rows
-          const order_id = rows[0].order_id
-          const order_no = rows[0].order_no
-          const result = 'Found '+response.data.total+' actions!'
-          this.setState({
-            rows: rows,
-            order_id: order_id,
-            result: result
-          })
-        }
-        else {
-          this.setState({
-            rows: [],
-            result: 'Cannot find any actions!'
-          })
-        }
-      })
-    }
-  }
-
-  componentDidMount(){
-    getUnitHistory(this.state.uid).then(response=>{
-      if(response.data.total>0){
+  handleSubmit = e => {
+    e.preventDefault()
+    getUnitHistory(this.state.uid).then(response => {
+      if (response.data.total > 0) {
         const rows = response.data.rows
         const order_id = rows[0].order_id
         const order_no = rows[0].order_no
-        const result = 'Found '+response.data.total+' actions!'
-        this.setState({
-          rows: rows,
-          order_id: order_id,
-          result: result
+        getOrderInfo(order_id).then(response => {
+          if (response.data.total > 0) {
+            const state = response.data.rows[0]
+            state.qty_mr = state.qty_mr === null
+              ? 0
+              : state.qty_mr
+            state.qty_remain = state.qty_order - state.qty_mr
+            state.rows = rows
+            this.setState(state)
+          } else {
+            this.setState({item_no: '', cust_code: '', qty_order: 0, qty_mr: 0, qty_remain: 0})
+          }
         })
+      } else {
+        this.setState({rows: []})
       }
     })
   }
 
-  render() {
-    const {classes} = this.props
-    const {uid, result, rows, order_id} =this.state
-    return (<div>
-      <SEO title="Unit" keywords={[`gatsby`, `application`, `react`]}/>
-      <main className={classes.content}>
-        <div className={classes.appBarSpacer}/>
-        <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-          Unit History
-        </Typography>
-        <Paper>
-          <TextField id="uid" className={classes.textField} label="Enter UID" value={uid} onChange={this.handleChange('uid')} margin="normal" variant='outlined' required style={{width: 500}}/>
-          <TextField id="result" className = {classes.textField} label="Result"  value={result} margin="normal" variant='outlined' style={{width: 500}} disabled/>
-        </Paper>
-        <OrderInfo id={order_id} />
-        <Typography component="div" className={classes.tableContainer}>
-          <Paper>
-            <Grid columns={columns} rows={rows}>
-              <Table/>
-              <TableHeaderRow/> {this.props.loading && <Loading/>}
-            </Grid>
-          </Paper>
-        </Typography>
-      </main>
-    </div>)
+componentDidMount() {
+  getUnitHistory(this.state.uid).then(response => {
+    if (response.data.total > 0) {
+      const rows = response.data.rows
+      const order_id = rows[0].order_id
+      const order_no = rows[0].order_no
+      getOrderInfo(order_id).then(response => {
+        if (response.data.total > 0) {
+          const state = response.data.rows[0]
+          state.qty_mr = state.qty_mr === null
+            ? 0
+            : state.qty_mr
+          state.qty_remain = state.qty_order - state.qty_mr
+          state.rows = rows
+          this.setState(state)
+        } else {
+          this.setState({item_no: '', cust_code: '', qty_order: 0, qty_mr: 0, qty_remain: 0})
+        }
+      })
+    }
+  })
+}
+
+render() {
+  const {classes} = this.props
+  const {
+    uid,
+    rows,
+    order_id,
+    item_no,
+    cust_code,
+    qty_order,
+    qty_mr,
+    qty_remain,
+    order_no
+  } = this.state
+  const row = {
+    order_no: order_no,
+    item_no: item_no,
+    cust_code: cust_code,
+    qty_order: qty_order,
+    qty_mr: qty_mr,
+    qty_remain: qty_remain
   }
+  return (<div>
+    <SEO title="Unit" keywords={[`gatsby`, `application`, `react`]}/>
+    <main className={classes.content}>
+      <div className={classes.appBarSpacer}/>
+      <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
+        Unit History
+      </Typography>
+      <Paper>
+        <form onSubmit={this.handleSubmit}>
+          <TextField id="uid" className={classes.textField} label="Enter UID" value={uid} onChange={this.handleChange('uid')} margin="normal" variant='outlined' required style={{
+              width: 500
+            }}/>
+        </form>
+      </Paper>
+      <OrderInfo row={row}/>
+      <Typography component="div" className={classes.tableContainer}>
+        <Paper>
+          <Grid columns={columns} rows={rows}>
+            <Table/>
+            <TableHeaderRow/> {this.props.loading && <Loading/>}
+          </Grid>
+        </Paper>
+      </Typography>
+    </main>
+  </div>)
+}
 }
 
 export default withStyles(styles)(Unit)
