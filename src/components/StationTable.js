@@ -2,6 +2,7 @@ import React from 'react'
 import {Grid, Table, TableHeaderRow} from '@devexpress/dx-react-grid-material-ui'
 import {Link} from 'gatsby'
 import MyTable from './MyTable'
+import SubTable from './SubTable'
 
 import axios from 'axios'
 import qs from 'qs'
@@ -56,6 +57,29 @@ const stationColumns = [
   }
 ]
 
+const subColumns = [{
+  title: 'Status',
+  name: 'status'
+}, {
+  title: 'UID',
+  name: 'uid_link'
+}, {
+  title: 'Station',
+  name: 'station'
+}, {
+  title: 'Started Time',
+  name: 'start_date'
+}, {
+  title: 'Received Time',
+  name: 'end_date'
+}, {
+  title: 'Location',
+  name: 'location'
+}, {
+  title: 'User',
+  name: 'act_by'
+}]
+
 
 
 //***********STATE IS HERE ******///////////////
@@ -94,6 +118,8 @@ export default class StationTable extends React.Component {
       columns: allColumns,
       getData: this.getBatch,
       selection: [],
+      subRows: [],
+      subTable: true,
       rows: []
     }
     this.getUnitByStation = async (state,props) => {
@@ -131,6 +157,7 @@ export default class StationTable extends React.Component {
         console.log(error)
       }
     }
+
     this.changeSelection = selection =>{
       this.setState({selection})
       const ids = []
@@ -156,27 +183,36 @@ export default class StationTable extends React.Component {
           columns: columns,
           selection: [],
           remotePaging: true,
-          getData: this.getUnitByStation
+          getData: this.getUnitByStation,
+          subTable: false
+
         })
       } else { //all stations
         this.setState({
           columns: columns,
           selection: [],
           remotePaging: false,
-          getData: this.getBatch
+          getData: this.getBatch,
+          subTable: true
         })
       }
     }
   }
 
   render() {
-    const {columns, rows, totalCount, getData, remotePaging, selection} = this.state
+    const {columns, rows, totalCount, getData, remotePaging, selection, subTable} = this.state
     const {id, station, onSelectionChange, update} = this.props
     return (<MyTable columns={columns} rows={rows} totalCount={totalCount}
               getData={getData} id={id} station={station}
               selection={selection}
               onSelectionChange={this.changeSelection}
               remotePaging={remotePaging}
+              rowDetail = {({row}) => (
+                <SubTable
+                  columns={subColumns}
+                  id={row.batch_id}
+                />)}
+              subTable={subTable}
               update={update}
             />)
   }

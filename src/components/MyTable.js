@@ -18,7 +18,6 @@ class MyTable extends React.Component {
       pageSizes: [10, 20, 30, 100],
       currentPage: 0,
       searchValue: '',
-      expandedRowIds: [],
       sorting: [
         {
           columnName: '_id',
@@ -87,9 +86,11 @@ class MyTable extends React.Component {
 
   componentDidMount() {
     const {sorting, currentPage, pageSize,searchValue} = this.state
-    this.props.getData(this.state, this.props).then(()=>{
-      this.setState({loading: false})
-    })
+    if(!!this.props.getData){
+      this.props.getData(this.state, this.props).then(()=>{
+        this.setState({loading: false})
+      })
+    }
   }
 
   render() {
@@ -98,7 +99,6 @@ class MyTable extends React.Component {
       currentPage,
       pageSize,
       pageSizes,
-      expandedRowIds,
       loading
     } = this.state
     const {
@@ -107,7 +107,9 @@ class MyTable extends React.Component {
       totalCount,
       columnWidths,
       selection,
-      remotePaging
+      remotePaging,
+      subTable,
+      rowDetail,
     } = this.props
     return (<Paper style={{
         position: 'relative'
@@ -128,6 +130,7 @@ class MyTable extends React.Component {
             onValueChange={this.changeSearchValue}
         />
         <SortingState sorting={sorting} onSortingChange={this.changeSorting}/>
+        {subTable && <RowDetailState />}
 
         <IntegratedSorting/>
         <IntegratedSelection/>
@@ -149,6 +152,9 @@ class MyTable extends React.Component {
           />
         <Toolbar />
         <SearchPanel />
+        {subTable &&<TableRowDetail
+            contentComponent={rowDetail}
+        />}
         <PagingPanel pageSizes = {pageSizes} />
       </Grid>
       {loading && <Loading />}

@@ -33,8 +33,9 @@ const getAction = async (uid, station) => {
   }
 }
 
-const setAction = async (start,uid, station, reason) =>{
+const setAction = async (start, input, station, reason) =>{
   const act = start ? 'addActionByAPTID' : 'updateActionByAPTID'
+  const uid = input.toUpperCase() // change all to uppercase
   try {
     const response = await axios.post(admin_url, qs.stringify({
       id: 'developer',
@@ -99,7 +100,7 @@ class ActionManagement extends React.Component {
             }
           })
           if(!multiple) setAction(true, this.state.uid, this.props.station, 'Open').then(response=>{
-            const result = response.data.result === 'insertAction_success'
+            const result = !!response && response.data.result === 'insertAction_success'
               ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
               : "Failed to add action!"
             this.setState({result: result})
@@ -121,7 +122,7 @@ class ActionManagement extends React.Component {
       exit: false
     })
     setAction(false, this.state.uid, this.props.station, this.state.reason).then(response=>{
-      const result = response.data.result === 'updateAction_success'
+      const result = !!response && response.data.result === 'updateAction_success'
         ? "Successfully updated action for " + response.data._id + " in "+ this.props.station+ "!"
         : "Failed to update action!"
       this.setState({result: result})
@@ -133,7 +134,7 @@ class ActionManagement extends React.Component {
       multiple: false
     })
     setAction(true, this.state.uid, this.props.station, this.state.multipleReason).then(response=>{
-      const result = response.data.result === 'insertAction_success'
+      const result = !!response && response.data.result === 'insertAction_success'
         ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
         : "Failed to update action!"
       this.setState({result: result})
