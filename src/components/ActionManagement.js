@@ -58,6 +58,7 @@ class ActionManagement extends React.Component {
       reason: 'Completed', // for exit reason value
       exit: false, //for exit dialog,
       message: '', //for info dialog message
+      result: '', //for set action result
       info: false //for info dialog
     }
 
@@ -97,7 +98,11 @@ class ActionManagement extends React.Component {
               this.setState({multiple: true})
             }
           })
-          if(!multiple) setAction(true, this.state.uid, this.props.station, 'Open').then(()=>{
+          if(!multiple) setAction(true, this.state.uid, this.props.station, 'Open').then(response=>{
+            const result = response.data.result === 'insertAction_success'
+              ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
+              : "Failed to add action!"
+            this.setState({result: result})
             this.props.handleOrderId(this.order_id)
           })
         }
@@ -115,7 +120,11 @@ class ActionManagement extends React.Component {
     this.setState({
       exit: false
     })
-    setAction(false, this.state.uid, this.props.station, this.state.reason).then(()=>{
+    setAction(false, this.state.uid, this.props.station, this.state.reason).then(response=>{
+      const result = response.data.result === 'updateAction_success'
+        ? "Successfully updated action for " + response.data._id + " in "+ this.props.station+ "!"
+        : "Failed to update action!"
+      this.setState({result: result})
       this.props.handleOrderId(this.order_id)
     })
   }
@@ -123,18 +132,23 @@ class ActionManagement extends React.Component {
     this.setState({
       multiple: false
     })
-    setAction(true, this.state.uid, this.props.station, this.state.multipleReason).then(()=>{
+    setAction(true, this.state.uid, this.props.station, this.state.multipleReason).then(response=>{
+      const result = response.data.result === 'insertAction_success'
+        ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
+        : "Failed to update action!"
+      this.setState({result: result})
       this.props.handleOrderId(this.order_id)
     })
   }
   render() {
     const {classes, id, station} = this.props
-    const {uid, multiple, reason, exit, multipleReason, info, message} = this.state
+    const {uid, multiple, reason, result, exit, multipleReason, info, message} = this.state
     return (<div>
       <form onSubmit={this.handleSubmit}>
         <TextField id="action_input" className={classes.textField} label="Enter UID" value={uid} onChange={this.handleInput} margin="normal" variant='outlined' required style={{
             width: 500
           }}/>
+        {result}
       </form>
       <MyDialog title='Scan Out' open={exit} handleClose={this.handleClose('exit')} handleSubmit={this.submitExitAction}>
         <FormControl className={classes.formControl}>
