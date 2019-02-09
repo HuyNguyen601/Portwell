@@ -1,8 +1,13 @@
 import React from 'react'
 
-import Paper from '@material-ui/core/Paper'
-import {SortingState, IntegratedSorting, IntegratedPaging, PagingState, SearchState,IntegratedSelection, SelectionState} from '@devexpress/dx-react-grid'
-import {Grid, Table, TableColumnResizing, TableHeaderRow, TableColumnVisibility, PagingPanel, Toolbar, SearchPanel, TableSelection} from '@devexpress/dx-react-grid-material-ui'
+//import Paper from '@material-ui/core/Paper'
+import {withStyles} from '@material-ui/core/styles'
+import {SortingState, IntegratedSorting, IntegratedPaging, PagingState ,IntegratedSelection, SelectionState} from '@devexpress/dx-react-grid'
+import {Grid, Table, TableColumnResizing, TableHeaderRow, TableColumnVisibility, PagingPanel, Toolbar , TableSelection} from '@devexpress/dx-react-grid-material-ui'
+import {Print} from '@material-ui/icons'
+import Button from '@material-ui/core/Button';
+
+
 import {Loading} from './loading.js'
 import {Link} from 'gatsby'
 
@@ -10,6 +15,17 @@ import axios from 'axios'
 import qs from 'qs'
 import {common_url} from '../config/config'
 
+const styles = theme => ({
+  button: {
+    margin: theme.spacing.unit,
+  },
+  leftIcon: {
+    marginRight: theme.spacing.unit,
+  },
+  rightIcon: {
+    marginLeft: theme.spacing.unit,
+  },
+})
 
 class SubTable extends React.Component {
   constructor(props) {
@@ -21,7 +37,7 @@ class SubTable extends React.Component {
       pageSize: 10,
       pageSizes: [10, 20, 30, 100],
       currentPage: 0,
-      searchValue: '',
+      selection: [],
       sorting: [
         {
           columnName: '_id',
@@ -79,8 +95,16 @@ class SubTable extends React.Component {
 
   render() {
     const {rows, loading, currentPage, pageSize, pageSizes, sorting, columnWidths, selection} = this.state
-    const {columns} = this.props
+    const {columns, classes} = this.props
     return (<div>
+      <Button variant = 'contained' className={classes.button} disabled={selection.length===0}>
+        <Print className ={classes.leftIcon} />
+        Small Label
+      </Button>
+      <Button variant = 'contained' className={classes.button} disabled={selection.length===0}>
+        <Print className ={classes.leftIcon} />
+        Large Label
+      </Button>
       <Grid rows={rows} columns={columns}>
         <SelectionState
             selection={selection}
@@ -120,4 +144,4 @@ class SubTable extends React.Component {
   }
 }
 
-export default SubTable
+export default withStyles(styles)(SubTable)

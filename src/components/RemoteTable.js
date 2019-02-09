@@ -1,15 +1,15 @@
 import React from 'react'
 
 import Paper from '@material-ui/core/Paper'
-import {SortingState, IntegratedSorting, IntegratedPaging, PagingState, CustomPaging, SearchState, RowDetailState,IntegratedSelection, SelectionState} from '@devexpress/dx-react-grid'
-import {Grid, Table, TableColumnResizing, TableHeaderRow, TableColumnVisibility, PagingPanel, Toolbar, SearchPanel, TableRowDetail, TableSelection} from '@devexpress/dx-react-grid-material-ui'
+import {SortingState, IntegratedSorting, PagingState, CustomPaging, SearchState,IntegratedSelection, SelectionState} from '@devexpress/dx-react-grid'
+import {Grid, Table, TableColumnResizing, TableHeaderRow, TableColumnVisibility, PagingPanel, Toolbar, SearchPanel, TableSelection} from '@devexpress/dx-react-grid-material-ui'
 
-import {Loading} from './loading.js'
-import {navigate} from 'gatsby'
+import {Loading} from './Loading.js'
 
+//paging, sorting, changePageSize always call the request.
+// server side paging, sorting, searching
 
-
-class MyTable extends React.Component {
+class RemoteTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -17,7 +17,7 @@ class MyTable extends React.Component {
       pageSize: 10,
       pageSizes: [10, 20, 30, 100],
       currentPage: 0,
-      searchValue: !!this.props.searchValue ? this.props.searchValue : '',
+      searchValue: '',
       sorting: [
         {
           columnName: '_id',
@@ -26,8 +26,8 @@ class MyTable extends React.Component {
       ]
 
     }
-    this.changeSorting = sorting => this.setState({sorting})
-    this.changePageSize = pageSize =>this.setState({pageSize: pageSize, currentPage: 0})
+    this.changeSorting = sorting => this.setState({sorting, currentPage: 0, loading: true})
+    this.changePageSize = pageSize =>this.setState({pageSize, currentPage: 0, loading: true})
     this.changeCurrentPage = this.changeCurrentPage.bind(this)
     this.changeSearchValue = this.changeSearchValue.bind(this)
   }
@@ -47,7 +47,7 @@ class MyTable extends React.Component {
   }
 
   componentDidUpdate(prevProps,prevState) {
-    const {sorting, currentPage, pageSize, searchValue ,rows} = this.state
+    const {sorting, currentPage, pageSize, searchValue} = this.state
     if(sorting !== prevState.sorting
       || currentPage !== prevState.currentPage
       || searchValue !== prevState.searchValue
@@ -85,7 +85,6 @@ class MyTable extends React.Component {
   }
 
   componentDidMount() {
-    const {sorting, currentPage, pageSize,searchValue} = this.state
     if(!!this.props.getData){
       this.props.getData(this.state, this.props).then(()=>{
         this.setState({loading: false})
@@ -108,10 +107,7 @@ class MyTable extends React.Component {
       columns,
       totalCount,
       columnWidths,
-      selection,
-      remotePaging,
-      subTable,
-      rowDetail,
+      selection
     } = this.props
     return (<Paper style={{
         position: 'relative'
@@ -125,15 +121,13 @@ class MyTable extends React.Component {
           onCurrentPageChange={this.changeCurrentPage}
           pageSize={pageSize}
           onPageSizeChange={this.changePageSize}/>
-        {remotePaging && <CustomPaging totalCount={totalCount}/>}
-        {!remotePaging && <IntegratedPaging/>}
+        <CustomPaging totalCount={totalCount} />
 
         <SearchState
             value = {searchValue}
             onValueChange={this.changeSearchValue}
         />
         <SortingState sorting={sorting} onSortingChange={this.changeSorting}/>
-        {subTable && <RowDetailState />}
 
         <IntegratedSorting/>
         <IntegratedSelection/>
@@ -155,9 +149,6 @@ class MyTable extends React.Component {
           />
         <Toolbar />
         <SearchPanel />
-        {subTable &&<TableRowDetail
-            contentComponent={rowDetail}
-        />}
         <PagingPanel pageSizes = {pageSizes} />
       </Grid>
       {loading && <Loading />}
@@ -165,4 +156,4 @@ class MyTable extends React.Component {
   }
 }
 
-export default MyTable
+export default RemoteTable

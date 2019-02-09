@@ -1,12 +1,11 @@
 import React from 'react'
-import {Grid, Table, TableHeaderRow} from '@devexpress/dx-react-grid-material-ui'
 import {Link} from 'gatsby'
 import MyTable from './MyTable'
 import SubTable from './SubTable'
 
 import axios from 'axios'
 import qs from 'qs'
-import {common_url, admin_url} from '../config/config'
+import {common_url} from '../config/config'
 
 const allColumns = [
   {
@@ -111,17 +110,7 @@ export default class StationTable extends React.Component {
         console.log(error)
       }
     }
-    this.state = {
-      totalCount: 0,
-      remotePaging: false,
-      update: false,
-      columns: allColumns,
-      getData: this.getBatch,
-      selection: [],
-      subRows: [],
-      subTable: true,
-      rows: []
-    }
+
     this.getUnitByStation = async (state,props) => {
       try {
         const response = await axios.post(common_url, qs.stringify({
@@ -130,6 +119,7 @@ export default class StationTable extends React.Component {
           jsonData: JSON.stringify({
             search_text: props.id,
             search_form: props.station,
+            search_value: state.searchValue,
             rows: state.pageSize,
             page: state.currentPage+1,
             sidx: state.sorting[0].columnName,
@@ -157,6 +147,19 @@ export default class StationTable extends React.Component {
         console.log(error)
       }
     }
+
+    this.state = {
+      totalCount: 0,
+      remotePaging: !this.props.station === 'All',
+      update: false,
+      columns: this.props.station ==='All' ? allColumns : stationColumns,
+      getData: this.props.station === 'All' ? this.getBatch : this.getUnitByStation,
+      selection: [],
+      subRows: [],
+      subTable: this.props.station === 'All',
+      rows: []
+    }
+
 
     this.changeSelection = selection =>{
       this.setState({selection})
@@ -201,7 +204,7 @@ export default class StationTable extends React.Component {
 
   render() {
     const {columns, rows, totalCount, getData, remotePaging, selection, subTable} = this.state
-    const {id, station, onSelectionChange, update} = this.props
+    const {id, station, update} = this.props
     return (<MyTable columns={columns} rows={rows} totalCount={totalCount}
               getData={getData} id={id} station={station}
               selection={selection}

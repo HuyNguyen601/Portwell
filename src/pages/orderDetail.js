@@ -3,10 +3,8 @@ import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
-import Button from '@material-ui/core/Button'
-import Layout from '../components/layout'
+//import Layout from '../components/layout'
 import SEO from '../components/seo'
-import MyTable from '../components/MyTable'
 import {styles} from '../utils/styles'
 import OrderInfo from '../components/OrderInfo'
 import StationDisplay from '../components/StationDisplay'
@@ -45,6 +43,22 @@ const getOrderId = async order_no =>{
   }
 }
 
+const toValue = station =>{
+  if(!!station) {
+    switch (station.trim()){
+      case 'Material R':
+        return 1
+      case 'Assembly':
+        return 2
+      case 'Burn In':
+        return 3
+      case 'Packing':
+        return 4
+      default: return 0
+    }
+  } else return 0
+}
+
 class OrderDetail extends React.Component {
   constructor(props) {
     super(props)
@@ -57,6 +71,8 @@ class OrderDetail extends React.Component {
       qty_order: 0,
       cust_code: '',
       item_no: '',
+      value: !!this.props.location.state ? toValue(this.props.location.state.station) : 0,
+      uid: !!this.props.location.state ? this.props.location.state.uid : '',
       updateAction: false, //toggle to update child components, when add or update actions in stations
       updateQty: false //toggle to update Qty info, when generate or delete batch
     }
@@ -66,7 +82,7 @@ class OrderDetail extends React.Component {
       })
     }
     this.handleSubmit = this.handleSubmit.bind(this)
-    this.handleOrderId = value=>this.setState({id: value, updateAction: !this.state.updateAction})
+    this.handleOrderId = (order_id)=>this.setState({id: order_id, updateAction: !this.state.updateAction})
     this.handleUpdate = ()=>this.setState({updateQty: !this.state.updateQty})
   }
 
@@ -138,7 +154,7 @@ class OrderDetail extends React.Component {
 
   render() {
     const {classes} = this.props
-    const {id, order_no, qty_remain, qty_mr, qty_order, cust_code, item_no, updateQty, updateAction, orderNo} = this.state
+    const {id, uid, value, order_no, qty_remain, qty_mr, qty_order, cust_code, item_no, updateQty, updateAction, orderNo} = this.state
     const row = {
       order_no: orderNo,
       item_no: item_no,
@@ -172,7 +188,7 @@ class OrderDetail extends React.Component {
 
           </Paper>
           <OrderInfo row={row} />
-          <StationDisplay id={id} qtyRemain={qty_remain} handleOrderId={this.handleOrderId} updateQty={updateQty} handleUpdate={this.handleUpdate} updateAction={updateAction}/>
+          <StationDisplay id={id} uid={uid} value={value} qtyRemain={qty_remain} handleOrderId={this.handleOrderId} updateQty={updateQty} handleUpdate={this.handleUpdate} updateAction={updateAction}/>
         </main>
     </div>)
   }

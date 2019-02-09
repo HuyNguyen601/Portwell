@@ -103,7 +103,7 @@ class ActionManagement extends React.Component {
             const result = !!response && response.data.result === 'insertAction_success'
               ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
               : "Failed to add action!"
-            this.setState({result: result})
+            this.setState({result: result, uid:''})
             this.props.handleOrderId(this.order_id)
           })
         }
@@ -125,7 +125,7 @@ class ActionManagement extends React.Component {
       const result = !!response && response.data.result === 'updateAction_success'
         ? "Successfully updated action for " + response.data._id + " in "+ this.props.station+ "!"
         : "Failed to update action!"
-      this.setState({result: result})
+      this.setState({result: result, uid: ''})
       this.props.handleOrderId(this.order_id)
     })
   }
@@ -137,12 +137,21 @@ class ActionManagement extends React.Component {
       const result = !!response && response.data.result === 'insertAction_success'
         ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
         : "Failed to update action!"
-      this.setState({result: result})
+      this.setState({result: result, uid: ''})
       this.props.handleOrderId(this.order_id)
     })
   }
+
+  componentDidUpdate(prevProps, prevState){
+    if(prevProps !== this.props){
+      this.setState({
+        message: ''
+      })
+    }
+  }
+
   render() {
-    const {classes, id, station} = this.props
+    const {classes, station} = this.props
     const {uid, multiple, reason, result, exit, multipleReason, info, message} = this.state
     return (<div>
       <form onSubmit={this.handleSubmit}>

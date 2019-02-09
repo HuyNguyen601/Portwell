@@ -7,8 +7,11 @@ import {styles} from '../utils/styles'
 import {Paper, TextField} from '@material-ui/core'
 import {Grid, Table, TableHeaderRow} from '@devexpress/dx-react-grid-material-ui'
 
+import {Link} from 'gatsby'
+
 import OrderInfo from '../components/OrderInfo'
 import Loading from '../components/Loading'
+
 
 import axios from 'axios'
 import qs from 'qs'
@@ -99,7 +102,7 @@ class Unit extends React.Component {
       if (response.data.total > 0) {
         const rows = response.data.rows
         const order_id = rows[0].order_id
-        const order_no = rows[0].order_no
+        const station = rows[0].station
         getOrderInfo(order_id).then(response => {
           if (response.data.total > 0) {
             const state = response.data.rows[0]
@@ -108,6 +111,7 @@ class Unit extends React.Component {
               : state.qty_mr
             state.qty_remain = state.qty_order - state.qty_mr
             state.rows = rows
+            state.order_no = <Link to='/orderDetail' state={{id: order_id, uid: this.state.uid, station: station}}> {state.order_no}</Link>
             this.setState(state)
           } else {
             this.setState({item_no: '', cust_code: '', qty_order: 0, qty_mr: 0, qty_remain: 0})
@@ -124,7 +128,7 @@ componentDidMount() {
     if (response.data.total > 0) {
       const rows = response.data.rows
       const order_id = rows[0].order_id
-      const order_no = rows[0].order_no
+      const station = rows[0].station
       getOrderInfo(order_id).then(response => {
         if (response.data.total > 0) {
           const state = response.data.rows[0]
@@ -133,6 +137,7 @@ componentDidMount() {
             : state.qty_mr
           state.qty_remain = state.qty_order - state.qty_mr
           state.rows = rows
+          state.order_no = <Link to='/orderDetail' state={{id: order_id, uid: this.state.uid, station: station}}> {state.order_no}</Link>
           this.setState(state)
         } else {
           this.setState({item_no: '', cust_code: '', qty_order: 0, qty_mr: 0, qty_remain: 0})
@@ -147,7 +152,6 @@ render() {
   const {
     uid,
     rows,
-    order_id,
     item_no,
     cust_code,
     qty_order,

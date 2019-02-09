@@ -1,11 +1,9 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
-import TextField from '@material-ui/core/TextField'
-import Button from '@material-ui/core/Button'
-import Layout from '../components/layout'
+//import Layout from '../components/layout'
 import SEO from '../components/seo'
-import MyTable from '../components/MyTable'
+import RemoteTable from '../components/RemoteTable'
 import {styles} from '../utils/styles'
 //axios to handle xmlhttp request
 import axios from 'axios'
@@ -91,11 +89,7 @@ class OrderList extends React.Component {
         console.log(error)
       }
     }
-    this.changeSelection = this.changeSelection.bind(this)
 
-  }
-  changeSelection(selection){
-    this.setState({selection})
   }
 
 
@@ -123,14 +117,12 @@ class OrderList extends React.Component {
             Order List
           </Typography>
           <Typography component="div" className={classes.tableContainer}>
-            <MyTable
+            <RemoteTable
               columns={this.state.columns}
               rows={this.state.rows}
               totalCount={this.state.totalCount}
               columnWidths={this.state.columnWidths}
               getData={this.getOrder}
-              onSelectionChange ={this.changeSelection}
-              remotePaging
             />
           </Typography>
         </main>
