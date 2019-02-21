@@ -64,7 +64,7 @@ class Layout extends React.Component {
             ALS
 
             </Typography>
-            {getUser().name}
+            {getUser().user_name}
             <IconButton color="inherit" onClick={e=>logout(()=>navigate(`/login`))}>
               <Person/>
             </IconButton>

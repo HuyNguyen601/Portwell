@@ -1,8 +1,9 @@
 import React from 'react'
-import {TextField, Select, FormControl, InputLabel, Input} from '@material-ui/core'
+import {TextField, Select, FormControl, InputLabel, Input, MenuItem} from '@material-ui/core'
 import {withStyles} from '@material-ui/core/styles'
 
 import {MyDialog} from './MyDialog'
+import {getUser} from '../services/auth'
 
 import axios from 'axios'
 import qs from 'qs'
@@ -39,7 +40,7 @@ const setAction = async (start, input, station, reason) =>{
   try {
     const response = await axios.post(admin_url, qs.stringify({
       id: 'developer',
-      jsonMeta: JSON.stringify({"act": act}),
+      jsonMeta: JSON.stringify({act: act, userid: getUser().user_id  }),
       jsonData: JSON.stringify({search_text: uid, search_form: station, reason: reason})
     }))
     return response
@@ -100,11 +101,12 @@ class ActionManagement extends React.Component {
             }
           })
           if(!multiple) setAction(true, this.state.uid, this.props.station, 'Open').then(response=>{
+            const uid = this.state.uid
             const result = !!response && response.data.result === 'insertAction_success'
               ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
               : "Failed to add action!"
             this.setState({result: result, uid:''})
-            this.props.handleOrderId(this.order_id)
+            this.props.handleOrderId(this.order_id,uid)
           })
         }
       } else {
@@ -122,11 +124,12 @@ class ActionManagement extends React.Component {
       exit: false
     })
     setAction(false, this.state.uid, this.props.station, this.state.reason).then(response=>{
+      const uid = this.state.uid
       const result = !!response && response.data.result === 'updateAction_success'
         ? "Successfully updated action for " + response.data._id + " in "+ this.props.station+ "!"
         : "Failed to update action!"
       this.setState({result: result, uid: ''})
-      this.props.handleOrderId(this.order_id)
+      this.props.handleOrderId(this.order_id, uid)
     })
   }
   submitMultipleAction = e => {
@@ -134,11 +137,12 @@ class ActionManagement extends React.Component {
       multiple: false
     })
     setAction(true, this.state.uid, this.props.station, this.state.multipleReason).then(response=>{
+      const uid = this.state.uid
       const result = !!response && response.data.result === 'insertAction_success'
         ? "Successfully added action for " + response.data._id + " in "+ this.props.station+ "!"
         : "Failed to update action!"
       this.setState({result: result, uid: ''})
-      this.props.handleOrderId(this.order_id)
+      this.props.handleOrderId(this.order_id, uid)
     })
   }
 
@@ -164,23 +168,23 @@ class ActionManagement extends React.Component {
         <FormControl className={classes.formControl}>
           <InputLabel htmlFor='exit-reason'>Reason</InputLabel>
           <Select value={reason} onChange={this.handleChange('reason')} input={<Input id = 'exit-reason' />}>
-            <option value='Completed'>Completed</option>
-            <option value={'Incomplete '+station}>Incomplete {station}</option>
-            <option value='Material Shortage'>Material Shortage</option>
-            <option value='Troubleshooting'>Troubleshooting</option>
-            <option value='Pending-Customer'>Pending for Approval - Customer</option>
-            <option value='Pending-Sales'>Pending for Approval - Sales</option>
-            <option value='Pending-Production'>Pending for Approval - Production</option>
-            <option value='Pending-QA'>Pending for Approval - QA</option>
-            <option value='Pending-PM'>Pending for Approval - PM</option>
-            <option value='Material Nonconformance'>Material Nonconformance</option>
-            <option value='Change Priority'>Change Order Priority</option>
-            <option value='Compatibility Issue'>Compatibility Issue</option>
-            <option value='Partial Built'>Partial Built</option>
-            <option value='Pending-Defective Replacement'>Pending for Defective Replacement</option>
-            <option value='Pending-Change Order'>Pending for Change Order</option>
-            <option value='Pending-WI/Traveler'>Pending for WI/Traveler</option>
-            <option value='Other'>Other</option>
+            <MenuItem value='Completed'>Completed</MenuItem>
+            <MenuItem value={'Incomplete '+station}>Incomplete {station}</MenuItem>
+            <MenuItem value='Material Shortage'>Material Shortage</MenuItem>
+            <MenuItem value='Troubleshooting'>Troubleshooting</MenuItem>
+            <MenuItem value='Pending-Customer'>Pending for Approval - Customer</MenuItem>
+            <MenuItem value='Pending-Sales'>Pending for Approval - Sales</MenuItem>
+            <MenuItem value='Pending-Production'>Pending for Approval - Production</MenuItem>
+            <MenuItem value='Pending-QA'>Pending for Approval - QA</MenuItem>
+            <MenuItem value='Pending-PM'>Pending for Approval - PM</MenuItem>
+            <MenuItem value='Material Nonconformance'>Material Nonconformance</MenuItem>
+            <MenuItem value='Change Priority'>Change Order Priority</MenuItem>
+            <MenuItem value='Compatibility Issue'>Compatibility Issue</MenuItem>
+            <MenuItem value='Partial Built'>Partial Built</MenuItem>
+            <MenuItem value='Pending-Defective Replacement'>Pending for Defective Replacement</MenuItem>
+            <MenuItem value='Pending-Change Order'>Pending for Change Order</MenuItem>
+            <MenuItem value='Pending-WI/Traveler'>Pending for WI/Traveler</MenuItem>
+            <MenuItem value='Other'>Other</MenuItem>
           </Select>
         </FormControl>
       </MyDialog>
@@ -188,18 +192,18 @@ class ActionManagement extends React.Component {
         <FormControl className={classes.formControl}>
           <InputLabel htmlFor='multiple-reason'>Reason</InputLabel>
           <Select value={multipleReason} onChange={this.handleChange('multipleReason')} input={<Input id = 'multiple-reason' />}>
-            <option value='Incomplete'>Incomplete {station}</option>
-            <option value='Troubleshooting'>Troubleshooting</option>
-            <option value='Rework'>Rework</option>
-            <option value='Material Nonconformance'>Material Nonconformance</option>
-            <option value='Material Shortage Fulfill'>Material Shortage Fulfill</option>
-            <option value='Change Order'>Change Order</option>
-            <option value='Change Priority'>Change Order Priority</option>
-            <option value='Compatibility Issue'>Compatibility Issue</option>
-            <option value='Workmanship-Invalid Status'>Workmanship - Invalid Status</option>
-            <option value={'Workmanship-'+station}>Workmanship - {station}</option>
-            <option value='Special Requirement'>Special Requirement - Customer</option>
-            <option value='Other'>Other</option>
+            <MenuItem value='Incomplete'>Incomplete {station}</MenuItem>
+            <MenuItem value='Troubleshooting'>Troubleshooting</MenuItem>
+            <MenuItem value='Rework'>Rework</MenuItem>
+            <MenuItem value='Material Nonconformance'>Material Nonconformance</MenuItem>
+            <MenuItem value='Material Shortage Fulfill'>Material Shortage Fulfill</MenuItem>
+            <MenuItem value='Change Order'>Change Order</MenuItem>
+            <MenuItem value='Change Priority'>Change Order Priority</MenuItem>
+            <MenuItem value='Compatibility Issue'>Compatibility Issue</MenuItem>
+            <MenuItem value='Workmanship-Invalid Status'>Workmanship - Invalid Status</MenuItem>
+            <MenuItem value={'Workmanship-'+station}>Workmanship - {station}</MenuItem>
+            <MenuItem value='Special Requirement'>Special Requirement - Customer</MenuItem>
+            <MenuItem value='Other'>Other</MenuItem>
           </Select>
         </FormControl>
       </MyDialog>

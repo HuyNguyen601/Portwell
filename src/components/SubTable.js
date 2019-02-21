@@ -47,10 +47,10 @@ class SubTable extends React.Component {
 
     }
 
+    this.changeSelection = selection => this.setState({selection})
     this.changeSorting = sorting => this.setState({sorting})
     this.changePageSize = pageSize =>this.setState({pageSize})
     this.changeCurrentPage = currentPage=>this.setState({currentPage})
-    this.changeCurrentPage = this.changeCurrentPage.bind(this)
 
     this.getBatchDetailByBatchId = async id=>{
       try {
@@ -108,7 +108,7 @@ class SubTable extends React.Component {
       <Grid rows={rows} columns={columns}>
         <SelectionState
             selection={selection}
-            onSelectionChange={this.props.onSelectionChange}
+            onSelectionChange={this.changeSelection}
           />
         <PagingState currentPage={currentPage}
           onCurrentPageChange={this.changeCurrentPage}

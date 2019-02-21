@@ -14,7 +14,7 @@ import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
 
 import { navigate } from "gatsby"
-import { handleLogin} from "../services/auth"
+import { handleLogin, isLoggedIn} from "../services/auth"
 
 const styles = theme => ({
   main: {
@@ -54,8 +54,7 @@ class LogIn extends React.Component{
     this.state = {
       username: ``,
       password: ``,
-      remember: false,
-      isLoggedIn: false
+      remember: false
     }
 
     this.handleUpdate = event => {
@@ -66,17 +65,17 @@ class LogIn extends React.Component{
 
     this.handleSubmit = event => {
       event.preventDefault()
-      if(handleLogin(this.state)){
-        this.setState({
-          isLoggedIn: true
-        })
-      }
+      handleLogin(this.state).then(result=>{
+        if(result){
+          navigate(`/`)
+        }
+      })
     }
   }
 
   render(){
   const { classes } = this.props;
-  if (this.state.isLoggedIn) {
+  if (isLoggedIn()) {
      navigate(`/`)
   }
 

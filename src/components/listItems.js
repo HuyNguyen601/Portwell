@@ -5,7 +5,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
-import {Layers} from '@material-ui/icons'
+import {Layers, Input} from '@material-ui/icons'
 import BarChartIcon from '@material-ui/icons/BarChart';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import {Link} from 'gatsby'
@@ -54,23 +54,38 @@ export const mainListItems = (<div>
 </div>);
 
 export const secondaryListItems = (<div>
-  <ListSubheader inset>Saved reports</ListSubheader>
-  <ListItem button>
-    <ListItemIcon>
-      <AssignmentIcon/>
-    </ListItemIcon>
-    <ListItemText primary="Current month"/>
-  </ListItem>
-  <ListItem button>
-    <ListItemIcon>
-      <AssignmentIcon/>
-    </ListItemIcon>
-    <ListItemText primary="Last quarter"/>
-  </ListItem>
-  <ListItem button>
-    <ListItemIcon>
-      <AssignmentIcon/>
-    </ListItemIcon>
-    <ListItemText primary="Year-end sale"/>
-  </ListItem>
+  <ListSubheader inset>SN Collections</ListSubheader>
+  <Link to='/worksheet' style={{textDecoration: 'none'}}>
+    <ListItem button>
+      <ListItemIcon>
+        <AssignmentIcon/>
+      </ListItemIcon>
+      <ListItemText primary="Worksheet"/>
+    </ListItem>
+  </Link>
+  <Link to='/sn' style={{textDecoration: 'none'}}>
+    <ListItem button>
+      <ListItemIcon>
+        <Input/>
+      </ListItemIcon>
+      <ListItemText primary="SN Scan"/>
+    </ListItem>
+  </Link>
+  <Link to='/component' style={{textDecoration: 'none'}}>
+    <ListItem button>
+      <ListItemIcon>
+        <Layers/>
+      </ListItemIcon>
+      <ListItemText primary="Components"/>
+    </ListItem>
+  </Link>
+  <Link to='/collection' style={{textDecoration: 'none'}}>
+    <ListItem button>
+      <ListItemIcon>
+        <DashboardIcon/>
+      </ListItemIcon>
+      <ListItemText primary="SN Collections"/>
+    </ListItem>
+  </Link>
+
 </div>);

@@ -1,6 +1,6 @@
 import React from 'react'
 import {Link} from 'gatsby'
-import MyTable from './MyTable'
+import LocalTable from './LocalTable'
 import SubTable from './SubTable'
 
 import axios from 'axios'
@@ -31,6 +31,22 @@ const allColumns = [
     title: 'User'
   }
 ]
+
+const allWidths = [{ columnName: '_id', width: 100 },
+{ columnName: 'status', width: 100 },
+{ columnName: 'batch_no', width: 150 },
+{ columnName: 'qty', width: 100 },
+{ columnName: 'start_date', width: 200 },
+{ columnName: 'date_delivery', width: 200 },
+{ columnName: 'location', width: 100 },
+{ columnName: 'act_by', width: 100 }]
+const stationWidths = [{ columnName: 'apt_id', width: 200 },
+{ columnName: 'status', width: 100 },
+{ columnName: 'batch_no', width: 100 },
+{ columnName: 'act_start', width: 200 },
+{ columnName: 'act_end', width: 200 },
+{ columnName: 'act_start_reason', width: 160 },
+{ columnName: 'act_end_reason', width: 160 }]
 const stationColumns = [
   {
     name: 'apt_id',
@@ -39,19 +55,19 @@ const stationColumns = [
     name: 'status',
     title: 'Status'
   }, {
-    name: 'descript',
+    name: 'batch_no',
     title: 'Batch Number'
   }, {
-    name: 'act_start',
+    name: 'date_start',
     title: 'Date Start'
   }, {
-    name: 'act_end',
+    name: 'date_end',
     title: 'Date End'
   }, {
-    name: 'act_start_reason',
+    name: 'open_reason',
     title: 'Open Reason'
   }, {
-    name: 'act_end_reason',
+    name: 'exit_reason',
     title: 'Exit Reason'
   }
 ]
@@ -78,87 +94,60 @@ const subColumns = [{
   title: 'User',
   name: 'act_by'
 }]
+const getBatch = async (order_id) => {
+  try {
+    const response = await axios.post(common_url, qs.stringify({
+      id: 'developer',
+      jsonMeta: JSON.stringify({"act": "searchBatchByOrderID"}),
+      jsonData: JSON.stringify({"search_text": order_id, "search_form": "Material Receiving"})
+    }))
+    const data = response.data
+    return data
+  } catch (error) {
+    console.log(error)
+  }
+}
 
+const getUnitByStation = async (uid,station) => {
+  try {
+    const response = await axios.post(common_url, qs.stringify({
+      id: 'developer',
+      jsonMeta: JSON.stringify({"act": "searchActionByAPTID"}),
+      jsonData: JSON.stringify({
+        search_text: uid,
+        search_form: station
+        })
+    }))
+    const data = response.data
+    return data
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 
 //***********STATE IS HERE ******///////////////
 export default class StationTable extends React.Component {
   constructor(props) {
     super(props)
-    this.getBatch = async (state, props) => {
-      try {
-        const response = await axios.post(common_url, qs.stringify({
-          id: 'developer',
-          jsonMeta: JSON.stringify({"act": "searchBatchByOrderID"}),
-          jsonData: JSON.stringify({"search_text": props.id, "search_form": "Material Receiving"})
-        }))
-        const data = response.data
-        if(data.total > 0){
-          this.setState({
-            rows: data.rows,
-            selection: [],
-            totalCount: data.total
-          })
-        }
-        else {
-          this.setState({
-            rows: [],
-            totalCount: 0
-          })
-        }
-      } catch (error) {
-        console.log(error)
-      }
-    }
 
-    this.getUnitByStation = async (state,props) => {
-      try {
-        const response = await axios.post(common_url, qs.stringify({
-          id: 'developer',
-          jsonMeta: JSON.stringify({"act": "getUnitByStation"}),
-          jsonData: JSON.stringify({
-            search_text: props.id,
-            search_form: props.station,
-            search_value: state.searchValue,
-            rows: state.pageSize,
-            page: state.currentPage+1,
-            sidx: state.sorting[0].columnName,
-            sord: state.sorting[0].direction
-            })
-        }))
-        const data = response.data
-        if(data.total > 0){
-          const rows = data.rows
-          rows.forEach(row=>{
-            row.apt_id = <Link to='/unit' state={{uid: row.apt_id}}>{row.apt_id}</Link>
-          })
-          this.setState({
-            rows: rows,
-            totalCount: data.total
-          })
-        }
-        else {
-          this.setState({
-            rows: [],
-            totalCount: 0
-          })
-        }
-      } catch (error) {
-        console.log(error)
-      }
+
+
+    this.changeWidths = columnWidths=>{
+      this.setState({
+        columnWidths
+      })
     }
 
     this.state = {
-      totalCount: 0,
-      remotePaging: !this.props.station === 'All',
-      update: false,
-      columns: this.props.station ==='All' ? allColumns : stationColumns,
-      getData: this.props.station === 'All' ? this.getBatch : this.getUnitByStation,
+      columnWidths: this.props.station === 'Material R' ? allWidths : stationWidths,
+      columns: this.props.station ==='Material R' ? allColumns : stationColumns,
       selection: [],
       subRows: [],
-      subTable: this.props.station === 'All',
+      subTable: this.props.station === 'Material R',
       rows: []
     }
+
 
 
     this.changeSelection = selection =>{
@@ -167,7 +156,7 @@ export default class StationTable extends React.Component {
       selection.forEach(s=>{
         ids.push(this.state.rows[s].batch_id)
       })
-      this.props.getDeleteIds(ids)
+      if(this.props.station === 'Material R') this.props.getDeleteIds(ids)
     }
   }
 
@@ -175,48 +164,77 @@ export default class StationTable extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.station !== this.props.station
-        || prevProps.id !== this.props.id) {
+        || prevProps.id !== this.props.id || this.props.update !== prevProps.update) {
 
       const station = this.props.station
-      const columns = station !== 'All'
+      const columns = station !== 'Material R'
         ? stationColumns
         : allColumns
-      if (station !== 'All') {//seperate stations
-        this.setState({
-          columns: columns,
-          selection: [],
-          remotePaging: true,
-          getData: this.getUnitByStation,
-          subTable: false
-
+      const columnWidths = station !== 'Material R'
+        ? stationWidths
+        : allWidths
+      if (station !== 'Material R') {//seperate stations
+        getUnitByStation(this.props.uid).then(data=>{
+          if(data.total>0){
+            this.setState({
+              columns: columns,
+              columnWidths: columnWidths,
+              selection: [],
+              rows: data.rows,
+              subTable: false
+            })
+          }
+          else {
+            this.setState({
+              columns: columns,
+              columnWidths: columnWidths,
+              selection: [],
+              rows: [],
+              subTable: false
+            })
+          }
         })
+
       } else { //all stations
-        this.setState({
-          columns: columns,
-          selection: [],
-          remotePaging: false,
-          getData: this.getBatch,
-          subTable: true
+        getBatch(this.props.id).then(data=>{
+          if(data.total>0){
+            this.setState({
+              columns: columns,
+              columnWidths: columnWidths,
+              selection: [],
+              rows: data.rows,
+              subTable: true
+            })
+          }
+          else {
+            this.setState({
+              columns: columns,
+              columnWidths: columnWidths,
+              selection: [],
+              rows: [],
+              subTable: true
+            })
+
+          }
         })
       }
     }
   }
 
   render() {
-    const {columns, rows, totalCount, getData, remotePaging, selection, subTable} = this.state
-    const {id, station, update} = this.props
-    return (<MyTable columns={columns} rows={rows} totalCount={totalCount}
-              getData={getData} id={id} station={station}
+    const {columns, rows, totalCount, getData, remotePaging, selection, subTable, columnWidths} = this.state
+    const {id, station, update, uid} = this.props
+    return (<LocalTable columns={columns} rows={rows}
+              columnWidths = {columnWidths} changeWidths = {this.changeWidths}
+              getData={getData} id={id} station={station} uid={uid}
               selection={selection}
               onSelectionChange={this.changeSelection}
-              remotePaging={remotePaging}
               rowDetail = {({row}) => (
                 <SubTable
                   columns={subColumns}
                   id={row.batch_id}
                 />)}
-              subTable={subTable}
-              update={update}
+              subTable = {subTable}
             />)
   }
 }

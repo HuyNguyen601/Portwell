@@ -51,12 +51,10 @@ const styles = theme => ({
 
 const toStation = value => {
   const station = value === 0
-    ? 'All'
-    : value === 1
       ? 'Material R' //this because database only hold 10 varchar
-      : value === 2
+      : value === 1
         ? 'Assembly'
-        : value === 3
+        : value === 2
           ? 'Burn In'
           : 'Packing'
   return station
@@ -114,7 +112,6 @@ class StationDisplay extends React.Component {
       infoDialog: false, // for general dialogs
       message: '', //dialog message
       value: this.props.value,
-      all: 0, //all stations
       mr: 0, //Material Receiving qty
       as: 0, // Assembly qty
       bi: 0, //Burn In qty
@@ -154,8 +151,7 @@ class StationDisplay extends React.Component {
       this.setState({
         message: message,
         infoDialog: true,
-        all: this.state.all - qty,
-        mr: this.state.mr - qty,
+        deleteIds: [],
         //update: !this.state.update
       })
       this.props.handleUpdate()
@@ -167,8 +163,6 @@ class StationDisplay extends React.Component {
         this.setState({
           newQty: 0,
           generate: false,
-          mr: this.state.mr + response.data.total,
-          all: this.state.all+response.data.total,
         //  update: !this.state.update
         })
         //force update table,
@@ -196,7 +190,7 @@ class StationDisplay extends React.Component {
 
   componentDidUpdate(prevProps, prevState){
     if(prevProps.id !== this.props.id || prevProps.updateAction !== this.props.updateAction || prevProps.updateQty !== this.props.updateQty){
-      getStationQty(prevProps.id).then(response=>{
+      getStationQty(this.props.id).then(response=>{
         if(response.data.total > 0){
           const rows = response.data.rows
           const temp = {
@@ -206,7 +200,7 @@ class StationDisplay extends React.Component {
             pk: 0
           }
           rows.forEach(row=>{
-            switch(row.station){
+            switch(row.station.trim()){
               case 'Material R':
                 temp.mr = row.qty
                 break
@@ -222,13 +216,11 @@ class StationDisplay extends React.Component {
               default: break
             }
           })
-          temp.all = temp.as + temp.bi + temp.mr + temp.pk
           temp.update = !this.state.update
           this.setState(temp)
         }
         else {
           this.setState({
-            all: 0,
             mr: 0,
             bi: 0,
             as: 0,
@@ -253,7 +245,7 @@ class StationDisplay extends React.Component {
           pk: 0
         }
         rows.forEach(row=>{
-          switch(row.station){
+          switch(row.station.trim()){
             case 'Material R':
               temp.mr = row.qty
               break
@@ -269,12 +261,10 @@ class StationDisplay extends React.Component {
             default: break
           }
         })
-        temp.all = temp.as + temp.bi + temp.mr + temp.pk
         this.setState(temp)
       }
       else {
         this.setState({
-          all: 0,
           mr: 0,
           bi: 0,
           as: 0,
@@ -286,15 +276,10 @@ class StationDisplay extends React.Component {
   }
 
   render() {
-    const {value, all, mr, as, bi, pk, generate, newQty, deleteIds, deleteDialog, infoDialog, message, update, uid} = this.state
-    const {classes, id, qtyRemain} = this.props
+    const {value, mr, as, bi, pk, generate, newQty, deleteIds, deleteDialog, infoDialog, message, update} = this.state
+    const {classes, id, qtyRemain, uid} = this.props
     return (<Paper>
       <Tabs value={value} variant='fullWidth' indicatorColor="primary" textColor="primary" onChange={this.handleChange}>
-        <Tab label={
-          <Badge className = {classes.padding} badgeContent={all} max={999} color="primary">
-            All
-          </Badge>
-        }/>
         <Tab label={
           <Badge className = {classes.padding} badgeContent={mr} max={999} color="primary">
             Material Receiving
@@ -314,7 +299,7 @@ class StationDisplay extends React.Component {
         }/>
       </Tabs>
       {/*each station has each own buttons*/}
-      { value === 0 && //All station buttons
+      { value === 0 && //MR station buttons
         <div>
           <Fab color="primary" aria-label="Add" onClick={e=>this.setState({generate: true})} className={classes.fab} disabled={!qtyRemain}>
             <AddIcon />
@@ -324,7 +309,7 @@ class StationDisplay extends React.Component {
           </Fab>
         </div>
       }
-      { (value !== 1 && value !== 0) && //Any station but All and MR
+      { (value !== 0) && //Any station but MR
         <ActionManagement station={toStation(value)} id={id} handleOrderId={this.props.handleOrderId}/>
       }
 

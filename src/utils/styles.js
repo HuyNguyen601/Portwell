@@ -85,5 +85,12 @@ export const styles = theme => ({
   h5: {
     marginBottom: theme.spacing.unit * 2,
   },
+  button: {
+    margin: theme.spacing.unit,
+  },
+  formControl: {
+    margin: theme.spacing.unit,
+    minWidth: 120,
+  },
 
 });

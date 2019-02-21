@@ -72,7 +72,7 @@ class OrderDetail extends React.Component {
       cust_code: '',
       item_no: '',
       value: !!this.props.location.state ? toValue(this.props.location.state.station) : 0,
-      uid: !!this.props.location.state ? this.props.location.state.uid : '',
+      uid: !!this.props.location.state ? this.props.location.state.uid :'',
       updateAction: false, //toggle to update child components, when add or update actions in stations
       updateQty: false //toggle to update Qty info, when generate or delete batch
     }
@@ -82,7 +82,7 @@ class OrderDetail extends React.Component {
       })
     }
     this.handleSubmit = this.handleSubmit.bind(this)
-    this.handleOrderId = (order_id)=>this.setState({id: order_id, updateAction: !this.state.updateAction})
+    this.handleOrderId = (order_id,uid)=>this.setState({id: order_id, uid: uid, updateAction: !this.state.updateAction})
     this.handleUpdate = ()=>this.setState({updateQty: !this.state.updateQty})
   }
 
