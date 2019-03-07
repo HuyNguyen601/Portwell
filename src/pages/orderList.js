@@ -1,7 +1,7 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
-//import Layout from '../components/layout'
+import Layout from '../components/layout'
 import SEO from '../components/seo'
 import RemoteTable from '../components/RemoteTable'
 import {styles} from '../utils/styles'
@@ -100,8 +100,7 @@ class OrderList extends React.Component {
 
   render() {
   const {classes} = this.props
-    return (
-      <div>
+    return (<Layout title='Order List'>
         <SEO title="Order List" keywords={[`gatsby`, `application`, `react`]} />
 
 
@@ -126,7 +125,7 @@ class OrderList extends React.Component {
             />
           </Typography>
         </main>
-  </div>)
+  </Layout>)
   }
 }
 

@@ -89,6 +89,8 @@ class RemoteTable extends React.Component {
       this.props.getData(this.state, this.props).then(()=>{
         this.setState({loading: false})
       })
+    } else {
+      this.setState({loading: false})
     }
   }
 
@@ -141,8 +143,8 @@ class RemoteTable extends React.Component {
         <TableSelection
             selectByRowClick
             highlightRow
-            showSelectionColumn
-            showSelectAll
+            showSelectionColumn={false}
+            //showSelectAll
           />
         <TableColumnVisibility
             defaultHiddenColumnNames={['_id']}

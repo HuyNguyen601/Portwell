@@ -43,10 +43,10 @@ const allWidths = [{ columnName: '_id', width: 100 },
 const stationWidths = [{ columnName: 'apt_id', width: 200 },
 { columnName: 'status', width: 100 },
 { columnName: 'batch_no', width: 100 },
-{ columnName: 'act_start', width: 200 },
-{ columnName: 'act_end', width: 200 },
-{ columnName: 'act_start_reason', width: 160 },
-{ columnName: 'act_end_reason', width: 160 }]
+{ columnName: 'date_start', width: 200 },
+{ columnName: 'date_end', width: 200 },
+{ columnName: 'open_reason', width: 160 },
+{ columnName: 'exit_reason', width: 160 }]
 const stationColumns = [
   {
     name: 'apt_id',

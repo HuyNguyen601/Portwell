@@ -1,4 +1,5 @@
 import React from 'react'
+import ReactToPrint from 'react-to-print'
 
 //import Paper from '@material-ui/core/Paper'
 import {withStyles} from '@material-ui/core/styles'
@@ -31,6 +32,7 @@ class SubTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      print: false,
       loading: true,
       rows: [],
       totalCount: 0,
@@ -46,7 +48,7 @@ class SubTable extends React.Component {
       ]
 
     }
-
+    this.handlePrint = e=>this.setState({print: !this.state.print})
     this.changeSelection = selection => this.setState({selection})
     this.changeSorting = sorting => this.setState({sorting})
     this.changePageSize = pageSize =>this.setState({pageSize})
@@ -97,11 +99,16 @@ class SubTable extends React.Component {
     const {rows, loading, currentPage, pageSize, pageSizes, sorting, columnWidths, selection} = this.state
     const {columns, classes} = this.props
     return (<div>
-      <Button variant = 'contained' className={classes.button} disabled={selection.length===0}>
-        <Print className ={classes.leftIcon} />
-        Small Label
-      </Button>
-      <Button variant = 'contained' className={classes.button} disabled={selection.length===0}>
+      <ReactToPrint trigger = {()=>
+        <Button variant = 'contained' className={classes.button} disabled={selection.length===0}>
+          <Print className ={classes.leftIcon} />
+            Small Label
+        </Button>}
+        content={()=>this.componentRef}
+        onBeforePrint={this.handlePrint}
+        onAfterPrint={this.handlePrint}
+      />
+      <Button ref={el=>(this.componentRef=el)} variant = 'contained' className={classes.button} disabled={selection.length===0}>
         <Print className ={classes.leftIcon} />
         Large Label
       </Button>

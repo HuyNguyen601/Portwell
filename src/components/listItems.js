@@ -5,7 +5,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
-import {Layers, Input} from '@material-ui/icons'
+import {Layers, Input, Image} from '@material-ui/icons'
 import BarChartIcon from '@material-ui/icons/BarChart';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import {Link} from 'gatsby'
@@ -43,12 +43,12 @@ export const mainListItems = (<div>
       <ListItemText primary="Unit History"/>
     </ListItem>
   </Link>
-  <Link to='/report' style={{textDecoration: 'none'}}>
+  <Link to='/imageUpload' style={{textDecoration: 'none'}}>
     <ListItem button>
       <ListItemIcon>
-        <BarChartIcon/>
+        <Image />
       </ListItemIcon>
-      <ListItemText primary="Reports"/>
+      <ListItemText primary="Image Upload"/>
     </ListItem>
   </Link>
 </div>);

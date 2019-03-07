@@ -16,8 +16,10 @@ import {Person} from '@material-ui/icons';
 import { mainListItems, secondaryListItems } from './listItems';
 
 import {styles} from '../utils/styles'
-import {getUser, logout} from '../services/auth'
+import {isLoggedIn, getUser, logout} from '../services/auth'
 import {navigate} from 'gatsby'
+//import LogIn from './login'
+import './layout.css'
 
 
 class Layout extends React.Component {
@@ -33,8 +35,16 @@ class Layout extends React.Component {
     this.setState({ open: false });
   };
 
+  componentDidMount(props){
+    if(!isLoggedIn()){
+      navigate('/login')
+    }
+
+  }
+
   render() {
-    const { classes} = this.props;
+    const { classes, title} = this.props;
+
     return (
       <div className={classes.root}>
         <CssBaseline />
@@ -61,11 +71,11 @@ class Layout extends React.Component {
               noWrap
               className={classes.title}
             >
-            ALS
+            {'ALS - ' + title}
 
             </Typography>
             {getUser().user_name}
-            <IconButton color="inherit" onClick={e=>logout(()=>navigate(`/login`))}>
+            <IconButton color="inherit" onClick={e=>logout(()=>navigate('/login'))}>
               <Person/>
             </IconButton>
           </Toolbar>
@@ -90,7 +100,7 @@ class Layout extends React.Component {
         {this.props.children}
 
       </div>
-    );
+    )
   }
 }
 

@@ -1,6 +1,7 @@
 import React from 'react'
 import Typography from '@material-ui/core/Typography'
 import {withStyles} from '@material-ui/core/styles'
+import Layout from '../components/layout'
 import SEO from '../components/seo'
 import {styles} from '../utils/styles'
 
@@ -167,7 +168,7 @@ render() {
     qty_mr: qty_mr,
     qty_remain: qty_remain
   }
-  return (<div>
+  return (<Layout title='Unit History'>
     <SEO title="Unit" keywords={[`gatsby`, `application`, `react`]}/>
     <main className={classes.content}>
       <div className={classes.appBarSpacer}/>
@@ -191,7 +192,7 @@ render() {
         </Paper>
       </Typography>
     </main>
-  </div>)
+  </Layout>)
 }
 }
 

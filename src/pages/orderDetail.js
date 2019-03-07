@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
-//import Layout from '../components/layout'
+import Layout from '../components/layout'
 import SEO from '../components/seo'
 import {styles} from '../utils/styles'
 import OrderInfo from '../components/OrderInfo'
@@ -163,8 +163,7 @@ class OrderDetail extends React.Component {
       qty_mr: qty_mr,
       qty_remain: qty_remain
     }
-    return (
-      <div>
+    return (<Layout title='Order Detail'>
         <SEO title="Order Detail" keywords={[`gatsby`, `application`, `react`]} />
 
         <main className={classes.content}>
@@ -190,7 +189,7 @@ class OrderDetail extends React.Component {
           <OrderInfo row={row} />
           <StationDisplay id={id} uid={uid} value={value} qtyRemain={qty_remain} handleOrderId={this.handleOrderId} updateQty={updateQty} handleUpdate={this.handleUpdate} updateAction={updateAction}/>
         </main>
-    </div>)
+    </Layout>)
   }
 }
 

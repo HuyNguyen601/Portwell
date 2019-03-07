@@ -6,18 +6,22 @@ import {
   Grid,
   Select,
   FormControl,
+  FormControlLabel,
   InputLabel,
   Input,
   MenuItem,
+  Typography,
+  Switch,
 } from '@material-ui/core'
-import Typography from '@material-ui/core/Typography'
-//import Layout from '../components/layout'
+import Layout from '../components/layout'
 import SEO from '../components/seo'
 import WorksheetTable from '../components/WorksheetTable'
+import { MyDialog } from '../components/MyDialog'
+import { Loading } from '../components/loading'
 //axios to handle xmlhttp request
 import axios from 'axios'
 import qs from 'qs'
-import { eve_url, common_url } from '../config/config'
+import { eve_url, common_url, admin_url, typeArray } from '../config/config'
 
 import { Link } from 'gatsby'
 
@@ -48,14 +52,14 @@ const styles = theme => ({
     minWidth: 120,
   },
 })
-
+/*
 const confirm_columns = [
   {
     name: 'type',
     title: 'Type',
   },
   {
-    name: 'description',
+    name: 'descript',
     title: 'Description',
   },
   {
@@ -75,13 +79,14 @@ const confirm_columns = [
     title: 'Seq',
   },
 ]
+
 const confirmWidths = [
   {
     columnName: 'type',
-    width: 100,
+    width: 200,
   },
   {
-    columnName: 'description',
+    columnName: 'descript',
     width: 300,
   },
   {
@@ -90,7 +95,7 @@ const confirmWidths = [
   },
   {
     columnName: 'model',
-    width: 300,
+    width: 250,
   },
   {
     columnName: 'qty',
@@ -100,9 +105,9 @@ const confirmWidths = [
     columnName: 'seq',
     width: 80,
   },
-]
+]*/
 
-const getOrderItem = async order_no => {
+const getOrder = async order_no => {
   try {
     const response = await axios.post(
       eve_url,
@@ -118,14 +123,15 @@ const getOrderItem = async order_no => {
   }
 }
 
-const getTemplate = async order_no => {
+
+const checkComponents = async (list, order_no) => {
   try {
     const response = await axios.post(
       common_url,
       qs.stringify({
         id: 'developer',
-        jsonMeta: JSON.stringify({ act: 'getTemplate' }),
-        jsonData: JSON.stringify({ order_no: order_no }),
+        jsonMeta: JSON.stringify({ act: 'checkComponents' }),
+        jsonData: JSON.stringify({ list: list, order_no: order_no }),
       })
     )
     return response
@@ -134,14 +140,14 @@ const getTemplate = async order_no => {
   }
 }
 
-const checkComponent = async itemno => {
+const setTemplate = async (order_no, rows) => {
   try {
     const response = await axios.post(
-      common_url,
+      admin_url,
       qs.stringify({
         id: 'developer',
-        jsonMeta: JSON.stringify({ act: 'checkComponentList' }),
-        jsonData: JSON.stringify({ itemno: itemno }),
+        jsonMeta: JSON.stringify({ act: 'setOrderComponent' }),
+        jsonData: JSON.stringify({ order_no: order_no, rows: rows }),
       })
     )
     return response
@@ -154,14 +160,16 @@ class Worksheet extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      loading: false,
+      info: false, // for Dialog
+      message: '', // message for Dialog
       order_no: '',
-      type: 'Misc',
+      type: 'Other SN',
+      associate: false,
       descript: '',
       itemno: '',
       model: '',
-      type_array: [],
       rows: [],
-      confirm_rows: [],
       selection: [],
       columns: [
         {
@@ -184,15 +192,11 @@ class Worksheet extends React.Component {
           name: 'qty',
           title: 'Qty',
         },
-        {
-          name: 'seq',
-          title: 'Seq',
-        },
       ],
       columnWidths: [
         {
           columnName: 'type',
-          width: 100,
+          width: 200,
         },
         {
           columnName: 'descript',
@@ -210,28 +214,53 @@ class Worksheet extends React.Component {
           columnName: 'qty',
           width: 80,
         },
-        {
-          columnName: 'seq',
-          width: 80,
-        },
       ],
     }
+    this.handleClose = type => e => this.setState({ [type]: false })
     this.handleChange = type => e => this.setState({ [type]: e.target.value })
     this.changeSelection = selection => this.setState({ selection })
     this.handleInput = type => e => this.setState({ [type]: e.target.value })
+    this.handleSwitch = type=>e=>this.setState({[type]: e.target.checked})
+    this.getOrderItem = this.getOrderItem.bind(this)
+    this.setOrderTemplate = this.setOrderTemplate.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
     this.addComponent = this.addComponent.bind(this)
     this.handleType = index => e => {
       e.preventDefault()
-      const type_array = this.state.type_array
-      type_array[index] = e.target.value
-      this.setState({ type_array })
+      const rows = this.state.rows
+      rows[index].item_type = e.target.value
+      this.setState({ rows })
     }
   }
 
+  setOrderTemplate = e => {
+    const { order_no, rows, selection } = this.state
+    const selected = []
+    selection.forEach(index => {
+      rows[index].item_type = rows[index].type.props.value
+      delete rows[index].type
+      selected.push(rows[index])
+    })
+    setTemplate(order_no, selected).then(response => {
+      if (response.data.total > 0) {
+        this.setState({
+          message: 'Successfully add ' + response.data.total + ' components!',
+          info: true,
+        })
+        this.getOrderItem()
+      } else {
+        this.setState({
+          message: 'Failed to create worksheet!',
+          info: true,
+        })
+      }
+    })
+
+  }
+
   addComponent = e => {
-    const { type, itemno, descript, model, type_array, selection } = this.state
-    const rows = this.state.rows.slice(0)
+    const { type, itemno, descript, model, selection, associate} = this.state
+    const rows=  this.state.rows.slice(0)
     if (rows.length > 0) {
       const row = {
         item_type: type,
@@ -239,69 +268,93 @@ class Worksheet extends React.Component {
         descript: descript,
         model: model,
       }
-      let seq = 0
-      rows.forEach(r => {
-        if (r.item_type === 'KIT') {
-          row.qty = r.qty
-        }
-        // find max seq
-        seq = seq > r.seq ? seq : r.seq
-      })
-      row.seq = seq + 1
+      if (associate) {
+        rows.forEach(r => {
+          if (r.itemno === row.itemno) {
+            row.qty = r.qty
+          }
+        })
+      } else {
+        rows.forEach(r => {
+          if (r.item_type.includes('KIT')) {
+            row.qty = r.qty
+          }
+        })
+      }
       const index = rows.push(row) - 1
       selection.push(index)
-      type_array.push(type)
+
       this.setState({
         selection,
         rows,
         itemno: '',
         descript: '',
         model: '',
-        type_array,
       })
     }
   }
 
-  handleSubmit = e => {
-    e.preventDefault()
-    getOrderItem(this.state.order_no).then(response => {
+  getOrderItem = ()=>{
+    getOrder(this.state.order_no).then(response => {
       const data = response.data.return
       if (!!data.error) {
-        this.setState({ rows: [] })
+        this.setState({ loading: false })
       } else {
-        const type_array = []
+        const rows = []
         const selection = []
-        data.forEach((row, index) => {
-          checkComponent(row.itemno).then(response => {
-            if (!!response.data && response.data.selected) {
-              //1, component is selected
-              selection.push(index)
+        const confirm = []
+        const pn_list = data.map(row => row.itemno)
+        checkComponents(pn_list, this.state.order_no).then(response => {
+          if (!!response.data) {
+            data.forEach(row => {
+              const comps = response.data[row.itemno]
+              if (!!comps) {
+                // if the component is in the list
+                comps.forEach(comp => {
+                  //the result is an array
+                  comp.qty = row.qty
+                  comp.seq = row.seq
+                  comp.item_type = comp.type
+                  const index = rows.push(comp) - 1
+                  if (comp.selected) selection.push(index)
+                  if (!!comp.componentID) confirm.push(index)
+                })
+              } else {
+                const temp = {
+                  item_type: row.item_type.includes('KIT')
+                    ? 'KIT/System SN'
+                    : 'Other SN',
+                  model: row.model,
+                  descript: row.descript,
+                  itemno: row.itemno,
+                  qty: row.qty,
+                  seq: row.seq,
+                }
+                const index = rows.push(temp) - 1
+              }
+            }) // data forEach
+            if(confirm.length>0) {
+              this.setState({ rows, selection: confirm, loading: false })
+            } else {
+              this.setState({ rows, selection, loading: false })
             }
-            row.item_type = !!response.data ? response.data.type : row.item_type
-            type_array[index] = row.item_type
-            this.setState({ selection, type_array }) // do it here async
-          })
-        })
-        data.map(row => {
-          return {
-            item_type: row.item_type,
-            itemno: row.itemno,
-            descript: row.descript,
-            model: row.model,
-            qty: row.qty,
-            seq: row.seq,
+
+          } else {
+            data.forEach(row=>{
+              row.item_type = row.item_type.includes('KIT') ? 'KIT/System SN' : 'Other SN'
+            })
+            this.setState({rows: data, loading: false})
           }
-        })
-        this.setState({ rows: data })
-      }
-    })
-    getTemplate(this.state.order_no).then(response => {
-      if (response.data.total > 0) {
-        this.setState({ confirm_rows: response.data.rows })
-      } else {
-        this.setState({ confirm_rows: [] })
-      }
-    })
+        }) //checkComponents
+      } // else statement
+    }) //getOrderItem
+  }
+
+  handleSubmit = e => {
+    e.preventDefault()
+    this.setState({ loading: true, selection: [], confirm: [] })
+    this.getOrderItem()
+
   }
 
   componentDidUpdate() {}
@@ -309,42 +362,39 @@ class Worksheet extends React.Component {
   render() {
     const { classes } = this.props
     const {
+      associate,
+      loading,
+      info,
+      message,
       order_no,
       rows,
       columns,
       columnWidths,
       selection,
       type,
-      type_array,
       descript,
       itemno,
       model,
-      confirm_rows,
     } = this.state
     if (rows.length > 0) {
       rows.forEach((row, index) => {
-        row.type = !!type_array[index] ? (
+        row.type = (
           <Select
-            value={type_array[index]}
+            value={row.item_type}
             onChange={this.handleType(index)}
             input={<Input id={'type' + index} />}
-            disabled={type_array[index] === 'KIT'}
           >
-            <MenuItem value="Misc">Misc</MenuItem>
-            <MenuItem value="Memory">Memory</MenuItem>
-            <MenuItem value="CPU">CPU</MenuItem>
-            <MenuItem value="SSD">SSD</MenuItem>
-            <MenuItem value="HDD">HDD</MenuItem>
-            <MenuItem value="ITM">ITM</MenuItem>
-            <MenuItem value="KIT">KIT</MenuItem>
+            {typeArray.map((row, index) => (
+              <MenuItem key={row + index} value={row}>
+                {row}
+              </MenuItem>
+            ))}
           </Select>
-        ) : (
-          ''
         )
       })
     }
     return (
-      <div>
+      <Layout title="Worksheet Preparation">
         <SEO title="Worksheet" keywords={[`gatsby`, `application`, `react`]} />
 
         <main className={classes.content}>
@@ -381,14 +431,27 @@ class Worksheet extends React.Component {
               selection={selection}
               onSelectionChange={this.changeSelection}
             />
+            {loading && <Loading />}
             <Grid container spacing={24}>
-              <Grid item xs={1}>
-                <Button className={classes.button} variant="contained">
+              <Grid item xs={12}>
+                <Button
+                  className={classes.button}
+                  variant="contained"
+                  onClick={this.setOrderTemplate}
+                >
                   Confirm
                 </Button>
               </Grid>
-              <Grid item xs={10} />
-
+              <Grid item xs={2}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={associate}
+                      onChange={this.handleSwitch('associate')}
+                      color="primary"
+                    />}
+                  label='Associate?'/>
+              </Grid>
               <Grid item xs={2}>
                 <FormControl className={classes.formControl}>
                   <InputLabel htmlFor="type">Type</InputLabel>
@@ -397,13 +460,11 @@ class Worksheet extends React.Component {
                     onChange={this.handleChange('type')}
                     input={<Input id="type" />}
                   >
-                    <MenuItem value="Misc">Misc</MenuItem>
-                    <MenuItem value="Memory">Memory</MenuItem>
-                    <MenuItem value="CPU">CPU</MenuItem>
-                    <MenuItem value="SSD">SSD</MenuItem>
-                    <MenuItem value="HDD">HDD</MenuItem>
-                    <MenuItem value="ITM">ITM</MenuItem>
-                    <MenuItem value="KIT">KIT</MenuItem>
+                    {typeArray.map((row, index) => (
+                      <MenuItem key={row + index} value={row}>
+                        {row}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -419,16 +480,35 @@ class Worksheet extends React.Component {
                 />
               </Grid>
               <Grid item xs={2}>
-                <TextField
-                  id="pn_input"
-                  className={classes.textField}
-                  label="Part No"
-                  value={itemno}
-                  onChange={this.handleInput('itemno')}
-                  margin="normal"
-                  variant="outlined"
-                  required
-                />
+                {!associate && (
+                  <TextField
+                    id="pn_input"
+                    className={classes.textField}
+                    label="Part No"
+                    value={itemno}
+                    onChange={this.handleInput('itemno')}
+                    margin="normal"
+                    variant="outlined"
+                    required
+                  />
+                )}
+                {associate && (
+                  <FormControl className={classes.formControl}>
+                    <InputLabel htmlFor="itemno">Part No</InputLabel>
+                    <Select
+                      value={itemno}
+                      onChange={this.handleChange('itemno')}
+                      input={<Input id="itemno" />}
+                      required
+                    >
+                      {rows.map((row, index) => (
+                        <MenuItem key={row.itemno + index} value={row.itemno}>
+                          {row.itemno}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
               </Grid>
               <Grid item xs={2}>
                 <TextField
@@ -455,23 +535,16 @@ class Worksheet extends React.Component {
                 </Button>
               </Grid>
             </Grid>
-            <Typography
-              component="h1"
-              variant="h6"
-              color="inherit"
-              noWrap
-              className={classes.title}
-            >
-              Confirmed Worksheet
-            </Typography>
-            <WorksheetTable
-              columns={confirm_columns}
-              rows={confirm_rows}
-              columnWidths={confirmWidths}
-            />
           </Typography>
+          <MyDialog
+            open={info}
+            handleClose={this.handleClose('info')}
+            title="Info Dialog"
+          >
+            {message}
+          </MyDialog>
         </main>
-      </div>
+      </Layout>
     )
   }
 }

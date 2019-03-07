@@ -30,7 +30,7 @@ const setUser = user =>
 const setTempUser = user=>
   window.sessionStorage.setItem("gatsbyUser",JSON.stringify(user))
 
-export const handleLogin = ({ username, password, remember }) => {
+export const handleLogin = ({ username, password, location, remember }) => {
   const email = username.includes('@portwell.com') ? username : username+'@portwell.com'
   return checkUser(email,password).then(response=>{
     const data = response.data
@@ -39,7 +39,7 @@ export const handleLogin = ({ username, password, remember }) => {
         user_name: data.record[0].username,
         user_id: data.record[0]._id,
         email: data.record[0].email,
-        location: 'B1'
+        location: location,
       }
       if(remember){
         setUser(user)
