@@ -25,7 +25,6 @@ import { Print as PrintIcon } from '@material-ui/icons'
 import Button from '@material-ui/core/Button'
 //for label printing
 import Barcode from 'react-barcode'
-import { Print } from 'react-easy-print'
 import {getUser} from '../services/auth'
 
 import { Loading } from './loading.js'
@@ -186,8 +185,7 @@ class SubTable extends React.Component {
           content={() => this.largeRef}
           onBeforePrint={this.handlePrint}
         />
-        <Print
-          printOnly
+        <div className = 'print'
           ref={el => {
             this.smallRef = el
           }}
@@ -202,9 +200,8 @@ class SubTable extends React.Component {
             />
             <div className='pageBreak'/>
           </div>)}
-        </Print>
-        <Print
-          printOnly
+        </div>
+        <div className ='print'
           ref={el => {
             this.largeRef = el
           }}
@@ -289,7 +286,7 @@ class SubTable extends React.Component {
             </table>
             <div className='pageBreak'/>
           </div>)}
-        </Print>
+        </div>
         <Grid rows={rows} columns={columns}>
           <SelectionState
             selection={selection}

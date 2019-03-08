@@ -6,4 +6,11 @@
   .pageBreak {
     page-break-after: always !important;
   }
+  .print {
+    display: block !important;
+  }
+}
+
+.print {
+  display: none;
 }

@@ -10,7 +10,6 @@ import OrderInfo from '../components/OrderInfo'
 import StationDisplay from '../components/StationDisplay'
 
 //for Print Labels
-import PrintProvider, {NoPrint} from 'react-easy-print'
 //for xhr
 import axios from 'axios'
 import qs from 'qs'
@@ -196,54 +195,52 @@ class OrderDetail extends React.Component {
       qty_remain: qty_remain,
     }
     return (
-      <PrintProvider>
-        <Layout title="Order Detail">
-          <SEO
-            title="Order Detail"
-            keywords={[`gatsby`, `application`, `react`]}
-          />
+      <Layout title="Order Detail">
+        <SEO
+          title="Order Detail"
+          keywords={[`gatsby`, `application`, `react`]}
+        />
 
-          <main className={classes.content}>
-            <div className={classes.appBarSpacer} />
-            <Typography
-              component="h1"
-              variant="h6"
-              color="inherit"
-              noWrap
-              className={classes.title}
-            >
-              Order Detail
-            </Typography>
-            <Paper>
-              <form onSubmit={this.handleSubmit}>
-                <TextField
-                  id="order_no"
-                  className={classes.textField}
-                  label="Enter Order Number"
-                  value={order_no}
-                  onChange={this.handleChange('order_no')}
-                  margin="normal"
-                  variant="outlined"
-                  autoComplete="off"
-                  required
-                  style={{ width: 500 }}
-                />
-              </form>
-            </Paper>
-            <OrderInfo row={row} />
-            <StationDisplay
-              id={id}
-              uid={uid}
-              value={value}
-              qtyRemain={qty_remain}
-              handleOrderId={this.handleOrderId}
-              updateQty={updateQty}
-              handleUpdate={this.handleUpdate}
-              updateAction={updateAction}
-            />
-          </main>
-        </Layout>
-      </PrintProvider>
+        <main className={classes.content}>
+          <div className={classes.appBarSpacer} />
+          <Typography
+            component="h1"
+            variant="h6"
+            color="inherit"
+            noWrap
+            className={classes.title}
+          >
+            Order Detail
+          </Typography>
+          <Paper>
+            <form onSubmit={this.handleSubmit}>
+              <TextField
+                id="order_no"
+                className={classes.textField}
+                label="Enter Order Number"
+                value={order_no}
+                onChange={this.handleChange('order_no')}
+                margin="normal"
+                variant="outlined"
+                autoComplete="off"
+                required
+                style={{ width: 500 }}
+              />
+            </form>
+          </Paper>
+          <OrderInfo row={row} />
+          <StationDisplay
+            id={id}
+            uid={uid}
+            value={value}
+            qtyRemain={qty_remain}
+            handleOrderId={this.handleOrderId}
+            updateQty={updateQty}
+            handleUpdate={this.handleUpdate}
+            updateAction={updateAction}
+          />
+        </main>
+      </Layout>
     )
   }
 }
