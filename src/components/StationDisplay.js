@@ -12,6 +12,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 
 import {MyDialog} from './MyDialog'
 import ActionManagement from './ActionManagement'
+import {getUser} from '../services/auth'
 
 
 import axios from 'axios'
@@ -78,7 +79,11 @@ const generateBatch = async (order_id, qty)=>{
     const response = await axios.post(admin_url,
       qs.stringify({
         id: 'developer',
-        jsonMeta: JSON.stringify({"act":"generateBatch"}),
+        jsonMeta: JSON.stringify({
+          "act":"generateBatch",
+          'userid': getUser().user_id,
+          'location': getUser().location
+        }),
         jsonData: JSON.stringify({"search_text": order_id,"qty": qty}),
       }))
     return response

@@ -7,6 +7,7 @@ import {SortingState, IntegratedSorting, IntegratedPaging, PagingState ,Integrat
 import {Grid, Table, TableColumnResizing, TableHeaderRow, TableColumnVisibility, PagingPanel, Toolbar , TableSelection} from '@devexpress/dx-react-grid-material-ui'
 import {Print} from '@material-ui/icons'
 import Button from '@material-ui/core/Button';
+import JsBarcode from 'jsbarcode'
 
 
 import {Loading} from './loading.js'
@@ -38,6 +39,7 @@ class SubTable extends React.Component {
       totalCount: 0,
       pageSize: 10,
       pageSizes: [10, 20, 30, 100],
+      printSmall: '',
       currentPage: 0,
       selection: [],
       sorting: [
@@ -53,7 +55,27 @@ class SubTable extends React.Component {
     this.changeSorting = sorting => this.setState({sorting})
     this.changePageSize = pageSize =>this.setState({pageSize})
     this.changeCurrentPage = currentPage=>this.setState({currentPage})
+    this.handleBeforePrint = e =>{
+      const uids = []
+      this.state.selection.forEach(index=>{
+        uids.push(this.state.rows[index].uid)
+      })
+      const uid = uids[0]
+      const svg = document.getElementById('svg')
+      /*JsBarcode(svg, uid, {
+        width: 2,
+        height: 100,
+        fontOptions: 'bold',
+        font: "san serif",
+        margin: 20,
+        fontSize: 30,
+        displayValue: true
+      });
+      */
 
+      console.log(svg)
+      this.setState({printSmall: 'Hi'})
+    }
     this.getBatchDetailByBatchId = async id=>{
       try {
         const response = await axios.post(common_url, qs.stringify({
@@ -93,10 +115,11 @@ class SubTable extends React.Component {
     this.getBatchDetailByBatchId(this.props.id).then(response=>{
       this.setState({loading: false})
     })
+    JsBarcode('#svg','Hi')
   }
 
   render() {
-    const {rows, loading, currentPage, pageSize, pageSizes, sorting, columnWidths, selection} = this.state
+    const {rows, loading, currentPage, pageSize, pageSizes, sorting, columnWidths, selection, printSmall} = this.state
     const {columns, classes} = this.props
     return (<div>
       <ReactToPrint trigger = {()=>
@@ -105,13 +128,18 @@ class SubTable extends React.Component {
             Small Label
         </Button>}
         content={()=>this.componentRef}
-        onBeforePrint={this.handlePrint}
+        onBeforePrint={this.handleBeforePrint}
         onAfterPrint={this.handlePrint}
       />
-      <Button ref={el=>(this.componentRef=el)} variant = 'contained' className={classes.button} disabled={selection.length===0}>
+      <Button  onClick ={this.handleBeforePrint} variant = 'contained' className={classes.button} disabled={selection.length===0}>
         <Print className ={classes.leftIcon} />
         Large Label
       </Button>
+      <div id='print'>
+        {printSmall}
+        <svg id='svg'></svg>
+
+      </div>
       <Grid rows={rows} columns={columns}>
         <SelectionState
             selection={selection}

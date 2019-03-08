@@ -40,7 +40,7 @@ const setAction = async (start, input, station, reason) =>{
   try {
     const response = await axios.post(admin_url, qs.stringify({
       id: 'developer',
-      jsonMeta: JSON.stringify({act: act, userid: getUser().user_id  }),
+      jsonMeta: JSON.stringify({act: act, userid: getUser().user_id, location: getUser().location  }),
       jsonData: JSON.stringify({search_text: uid, search_form: station, reason: reason})
     }))
     return response
