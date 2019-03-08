@@ -195,7 +195,7 @@ export default class StationTable extends React.Component {
           }
         })
 
-      } else { //all stations
+      } else { //Material Receiving stations
         getBatch(this.props.id).then(data=>{
           if(data.total>0){
             this.setState({
@@ -214,10 +214,31 @@ export default class StationTable extends React.Component {
               rows: [],
               subTable: true
             })
-
           }
         })
       }
+    }
+  }
+
+  componentDidMount(props){
+    if(this.props.station ==='Material R'){
+      getBatch(this.props.id).then(data=>{
+        if(data.total>0){
+          this.setState({
+            selection: [],
+            rows: data.rows,
+            subTable: true
+          })
+        }
+        else {
+          this.setState({
+            selection: [],
+            rows: [],
+            subTable: true
+          })
+        }
+      })
+
     }
   }
 

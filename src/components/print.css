@@ -1,8 +1,9 @@
 @media print {
-  body * {
-    display: none;
+  th, td {
+    padding: 0px !important;
+    border-bottom: 0px !important;
   }
-  .print {
-    display: block;
+  .pageBreak {
+    page-break-after: always !important;
   }
 }

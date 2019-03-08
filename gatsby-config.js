@@ -5,7 +5,7 @@ module.exports = {
     description: `Kick off your next, great Gatsby project with this default starter. This barebones starter ships with the main Gatsby configuration files you might need.`,
     author: `@gatsbyjs`,
   },
-  pathPrefix: `/try/pages/sfc2/Test`,
+  pathPrefix: `/try/pages/sfc2/2.2`,
   plugins: [
     `gatsby-plugin-react-helmet`,
     {

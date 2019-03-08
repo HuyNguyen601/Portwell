@@ -13,7 +13,7 @@ import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import {Person} from '@material-ui/icons';
-import { mainListItems, secondaryListItems } from './listItems';
+import { mainListItems, secondaryListItems, thirdListItems } from './listItems';
 
 import {styles} from '../utils/styles'
 import {isLoggedIn, getUser, logout} from '../services/auth'
@@ -96,6 +96,8 @@ class Layout extends React.Component {
           <List>{mainListItems}</List>
           <Divider />
           <List>{secondaryListItems}</List>
+          <Divider />
+          <List>{thirdListItems}</List>
         </Drawer>
         {this.props.children}
 
