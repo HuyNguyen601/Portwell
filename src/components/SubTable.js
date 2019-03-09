@@ -192,6 +192,7 @@ class SubTable extends React.Component {
         >
           {selection.map((index,run) => <div key={rows[index].apt_id}>
             <Barcode
+              className='full'
               value={rows[index].apt_id}
               fontOptions="bold"
               font="san serif"

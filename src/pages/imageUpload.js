@@ -226,7 +226,7 @@ import {SortingState, IntegratedSorting, IntegratedPaging, DataTypeProvider, Pag
         Upload Image
         <DropzoneComponent config={componentConfig}
         eventHandlers={eventHandlers}
-        djsConfig={djsConfig} action="http://192.168.0.96:8080/try/pages/sfc2/2.2/scripts/upload.php"/>
+        djsConfig={djsConfig} action={upload_url+"upload.php"}/>
         </div>
         <div style={{float:'left',width:'40%','margin-top':'40px','margin-left':'20px'}}>
         <TextField variant="outlined" value={this.state.description} label="Description" onChange={this.handleChangeDescription} /><br/>
