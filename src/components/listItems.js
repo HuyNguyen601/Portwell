@@ -43,6 +43,14 @@ export const mainListItems = (<div>
       <ListItemText primary="Unit History"/>
     </ListItem>
   </Link>
+  <Link to='/data' style={{textDecoration: 'none'}}>
+    <ListItem button>
+      <ListItemIcon>
+        <BarChartIcon />
+      </ListItemIcon>
+      <ListItemText primary="Data Analysis"/>
+    </ListItem>
+  </Link>
   <Link to='/imageUpload' style={{textDecoration: 'none'}}>
     <ListItem button>
       <ListItemIcon>
@@ -111,3 +119,10 @@ export const thirdListItems = (<div>
 
 
 </div>);
+
+export const travelerItem = <a href='http://192.168.0.18:8080/try/pages/traveler/2.1/index_traveler.php'><ListItem button>
+  <ListItemIcon>
+    <AssignmentIcon/>
+  </ListItemIcon>
+  <ListItemText primary="Traveler"/>
+</ListItem></a>

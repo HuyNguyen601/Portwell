@@ -27,7 +27,6 @@ import Button from '@material-ui/core/Button'
 import Barcode from 'react-barcode'
 import {getUser} from '../services/auth'
 
-import { Loading } from './loading.js'
 import { Link } from 'gatsby'
 import './print.css'
 import axios from 'axios'
@@ -50,13 +49,54 @@ class SubTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      loading: true,
-      rows: [],
-      totalCount: 0,
       pageSize: 10,
       pageSizes: [10, 20, 30, 100],
       currentPage: 0,
       selection: [],
+      columns: [{
+        title: 'Status',
+        name: 'status'
+      }, {
+        title: 'UID',
+        name: 'uid_link'
+      }, {
+        title: 'Station',
+        name: 'station'
+      }, {
+        title: 'Started Time',
+        name: 'start_date'
+      }, {
+        title: 'Received Time',
+        name: 'end_date'
+      }, {
+        title: 'Location',
+        name: 'location'
+      }, {
+        title: 'User',
+        name: 'act_by'
+      }],
+      columnWidths: [{
+        width: 150,
+        columnName: 'status'
+      }, {
+        width: 150,
+        columnName: 'uid_link'
+      }, {
+        width: 100,
+        columnName: 'station'
+      }, {
+        width: 150,
+        columnName: 'start_date'
+      }, {
+        width: 150,
+        columnName: 'end_date'
+      }, {
+        width: 100,
+        columnName: 'location'
+      }, {
+        width: 200,
+        columnName: 'act_by'
+      }],
       sorting: [
         {
           columnName: '_id',
@@ -64,56 +104,19 @@ class SubTable extends React.Component {
         },
       ],
     }
+    this.changeWidths = columnWidths => this.setState({columnWidths})
     this.changeSelection = selection => this.setState({ selection })
     this.changeSorting = sorting => this.setState({ sorting })
     this.changePageSize = pageSize => this.setState({ pageSize })
     this.changeCurrentPage = currentPage => this.setState({ currentPage })
-    this.getBatchDetailByBatchId = this.getBatchDetailByBatchId.bind(this)
     this.handlePrint = this.handlePrint.bind(this)
   }
 
-  getBatchDetailByBatchId = async id => {
-    try {
-      const response = await axios.post(
-        common_url,
-        qs.stringify({
-          id: 'developer',
-          jsonMeta: JSON.stringify({ act: 'searchBatchDetailByBatchID' }),
-          jsonData: JSON.stringify({
-            search_text: id,
-            search_form: 'Material Receiving',
-          }),
-        })
-      )
-      const data = response.data
-      if (data.total > 0) {
-        const rows = data.rows
-        rows.forEach(row => {
-          row.uid_link = (
-            <Link to="/unit" state={{ uid: row.apt_id }}>
-              {row.apt_id}
-            </Link>
-          )
-        })
-        this.setState({
-          rows: rows,
-          totalCount: data.total,
-        })
-      } else {
-        this.setState({
-          rows: [],
-          totalCount: 0,
-        })
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
   handlePrint = async ()=>{
-    const {selection, rows} = this.state
+    const {selection} = this.state
+    const {rows} = this.props
     const uids = selection.map(index=>rows[index].apt_id)
-    console.log(uids)
     try {
       const response = await axios.post(
         admin_url,
@@ -127,10 +130,7 @@ class SubTable extends React.Component {
       )
       const data = response.data
       if(data.total >0){
-        this.setState({loading: true, selection: []})
-        this.getBatchDetailByBatchId(this.props.id).then(response => {
-          this.setState({ loading: false })
-        })
+        this.setState({selection: []})
       }
     } catch(error){
       console.log(error)
@@ -138,23 +138,20 @@ class SubTable extends React.Component {
   }
 
   componentDidMount() {
-    this.getBatchDetailByBatchId(this.props.id).then(response => {
-      this.setState({ loading: false })
-    })
+
   }
 
   render() {
     const {
-      rows,
-      loading,
       currentPage,
       pageSize,
       pageSizes,
       sorting,
+      columns,
       columnWidths,
       selection,
     } = this.state
-    const { columns, classes } = this.props
+    const { classes, rows } = this.props
     return (
       <div>
         <ReactToPrint
@@ -190,17 +187,19 @@ class SubTable extends React.Component {
             this.smallRef = el
           }}
         >
-          {selection.map((index,run) => <div key={rows[index].apt_id}>
+          {selection.map((index,run) => <React.Fragment key={rows[index].apt_id}>
             <Barcode
-              className='full'
+              full
               value={rows[index].apt_id}
+              height={100}
               fontOptions="bold"
               font="san serif"
-              margin={20}
+              margin={30}
               fontSize={30}
             />
             <div className='pageBreak'/>
-          </div>)}
+
+          </React.Fragment>)}
         </div>
         <div className ='print'
           ref={el => {
@@ -248,7 +247,7 @@ class SubTable extends React.Component {
                   <th style={{ textFieldecoration: 'underline' }}>Batch #:</th>
                   <th>{<Barcode
                       value={rows[0].batch_no}
-                      width={1}
+                      width={2}
                       height= {20}
                       fontOptions= 'bold'
                       font= "san serif"
@@ -261,7 +260,7 @@ class SubTable extends React.Component {
                   <th style={{ textDecoration: 'underline' }}>Order #:</th>
                   <th>{<Barcode
                       value={rows[0].order_no}
-                      width={1}
+                      width={2}
                       height= {20}
                       fontOptions= 'bold'
                       font= "san serif"
@@ -299,17 +298,15 @@ class SubTable extends React.Component {
             pageSize={pageSize}
             onPageSizeChange={this.changePageSize}
           />
-          <IntegratedPaging />
-
           <SortingState
             sorting={sorting}
             onSortingChange={this.changeSorting}
           />
-
           <IntegratedSorting />
+          <IntegratedPaging />
           <IntegratedSelection />
           <Table />
-          <TableColumnResizing columnWidths={columnWidths} />
+          <TableColumnResizing columnWidths={columnWidths} onColumnWidthsChange={this.changeWidths}/>
 
           <TableHeaderRow showSortingControls />
 
@@ -323,7 +320,6 @@ class SubTable extends React.Component {
           <Toolbar />
           <PagingPanel pageSizes={pageSizes} />
         </Grid>
-        {loading && <Loading />}
       </div>
     )
   }

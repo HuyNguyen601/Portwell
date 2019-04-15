@@ -25,16 +25,12 @@ class LocalTable extends React.Component {
     }
     this.changeSorting = sorting => this.setState({sorting})
     this.changePageSize = pageSize =>this.setState({pageSize: pageSize, currentPage: 0})
-    this.changeCurrentPage = this.changeCurrentPage.bind(this)
+    this.changeCurrentPage = currentPage => this.setState({currentPage})
     this.changeSearchValue = this.changeSearchValue.bind(this)
   }
 
 
-  changeCurrentPage(currentPage) {
-    this.setState({
-      currentPage
-    });
-  }
+
   changeSearchValue(searchValue) {
     this.setState({
       searchValue

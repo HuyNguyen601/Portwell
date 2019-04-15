@@ -12,18 +12,19 @@ import {
   MenuItem,
   Typography,
   Switch,
+  Tooltip,
 } from '@material-ui/core'
 import Layout from '../components/layout'
 import SEO from '../components/seo'
 import WorksheetTable from '../components/WorksheetTable'
 import { MyDialog } from '../components/MyDialog'
 import { Loading } from '../components/loading'
+import { getUser } from '../services/auth'
+import ConfirmTable from '../components/ConfirmTable'
 //axios to handle xmlhttp request
 import axios from 'axios'
 import qs from 'qs'
 import { eve_url, common_url, admin_url, typeArray } from '../config/config'
-
-import { Link } from 'gatsby'
 
 const styles = theme => ({
   appBarSpacer: theme.mixins.toolbar,
@@ -52,10 +53,10 @@ const styles = theme => ({
     minWidth: 120,
   },
 })
-/*
+
 const confirm_columns = [
   {
-    name: 'type',
+    name: 'item_type',
     title: 'Type',
   },
   {
@@ -73,39 +74,10 @@ const confirm_columns = [
   {
     name: 'qty',
     title: 'Qty',
-  },
-  {
-    name: 'seq',
-    title: 'Seq',
-  },
+  }
 ]
 
-const confirmWidths = [
-  {
-    columnName: 'type',
-    width: 200,
-  },
-  {
-    columnName: 'descript',
-    width: 300,
-  },
-  {
-    columnName: 'itemno',
-    width: 200,
-  },
-  {
-    columnName: 'model',
-    width: 250,
-  },
-  {
-    columnName: 'qty',
-    width: 80,
-  },
-  {
-    columnName: 'seq',
-    width: 80,
-  },
-]*/
+
 
 const getOrder = async order_no => {
   try {
@@ -122,7 +94,6 @@ const getOrder = async order_no => {
     console.log(error)
   }
 }
-
 
 const checkComponents = async (list, order_no) => {
   try {
@@ -160,16 +131,20 @@ class Worksheet extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      permission: !!getUser().user_id,
       loading: false,
       info: false, // for Dialog
       message: '', // message for Dialog
-      order_no: '',
+      order_no: !!this.props.location.state
+        ? this.props.location.state.order_no
+        : '',
       type: 'Other SN',
       associate: false,
       descript: '',
       itemno: '',
       model: '',
       rows: [],
+      confirmRows: [],
       selection: [],
       columns: [
         {
@@ -216,11 +191,12 @@ class Worksheet extends React.Component {
         },
       ],
     }
+    this.changeWidths = columnWidths => this.setState({ columnWidths })
     this.handleClose = type => e => this.setState({ [type]: false })
     this.handleChange = type => e => this.setState({ [type]: e.target.value })
     this.changeSelection = selection => this.setState({ selection })
     this.handleInput = type => e => this.setState({ [type]: e.target.value })
-    this.handleSwitch = type=>e=>this.setState({[type]: e.target.checked})
+    this.handleSwitch = type => e => this.setState({ [type]: e.target.checked })
     this.getOrderItem = this.getOrderItem.bind(this)
     this.setOrderTemplate = this.setOrderTemplate.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -244,7 +220,7 @@ class Worksheet extends React.Component {
     setTemplate(order_no, selected).then(response => {
       if (response.data.total > 0) {
         this.setState({
-          message: 'Successfully add ' + response.data.total + ' components!',
+          message: 'Successfully add ' + response.data.total + ' SN lines!',
           info: true,
         })
         this.getOrderItem()
@@ -255,12 +231,11 @@ class Worksheet extends React.Component {
         })
       }
     })
-
   }
 
   addComponent = e => {
-    const { type, itemno, descript, model, selection, associate} = this.state
-    const rows=  this.state.rows.slice(0)
+    const { type, itemno, descript, model, selection, associate } = this.state
+    const rows = this.state.rows.slice(0)
     if (rows.length > 0) {
       const row = {
         item_type: type,
@@ -269,12 +244,14 @@ class Worksheet extends React.Component {
         model: model,
       }
       if (associate) {
+        row.parent = 0
         rows.forEach(r => {
           if (r.itemno === row.itemno) {
             row.qty = r.qty
           }
         })
       } else {
+        row.parent = 1
         rows.forEach(r => {
           if (r.item_type.includes('KIT')) {
             row.qty = r.qty
@@ -294,15 +271,16 @@ class Worksheet extends React.Component {
     }
   }
 
-  getOrderItem = ()=>{
+  getOrderItem = () => {
     getOrder(this.state.order_no).then(response => {
       const data = response.data.return
       if (!!data.error) {
-        this.setState({ loading: false })
+        this.setState({ loading: false, rows: [], confirmRows: [] })
       } else {
         const rows = []
         const selection = []
         const confirm = []
+        const confirmRows = []
         const pn_list = data.map(row => row.itemno)
         checkComponents(pn_list, this.state.order_no).then(response => {
           if (!!response.data) {
@@ -317,7 +295,10 @@ class Worksheet extends React.Component {
                   comp.item_type = comp.type
                   const index = rows.push(comp) - 1
                   if (comp.selected) selection.push(index)
-                  if (!!comp.componentID) confirm.push(index)
+                  if (!!comp.componentID) {
+                    confirm.push(index)
+                    confirmRows.push(comp)
+                  }
                 })
               } else {
                 const temp = {
@@ -329,21 +310,25 @@ class Worksheet extends React.Component {
                   itemno: row.itemno,
                   qty: row.qty,
                   seq: row.seq,
+                  parent: 1,
                 }
-                const index = rows.push(temp) - 1
+                rows.push(temp)
               }
             }) // data forEach
-            if(confirm.length>0) {
-              this.setState({ rows, selection: confirm, loading: false })
+            if (confirm.length > 0) {
+              this.setState({ rows, selection: confirm, loading: false, confirmRows })
             } else {
-              this.setState({ rows, selection, loading: false })
+              console.log(selection)
+              this.setState({ rows, selection, loading: false, confirmRows })
             }
-
           } else {
-            data.forEach(row=>{
-              row.item_type = row.item_type.includes('KIT') ? 'KIT/System SN' : 'Other SN'
+            data.forEach(row => {
+              row.parent = 1
+              row.item_type = row.item_type.includes('KIT')
+                ? 'KIT/System SN'
+                : 'Other SN'
             })
-            this.setState({rows: data, loading: false})
+            this.setState({ rows: data, loading: false })
           }
         }) //checkComponents
       } // else statement
@@ -354,14 +339,19 @@ class Worksheet extends React.Component {
     e.preventDefault()
     this.setState({ loading: true, selection: [], confirm: [] })
     this.getOrderItem()
-
   }
 
-  componentDidUpdate() {}
+  componentDidMount(props) {
+    if(this.state.order_no !== ''){
+      this.setState({loading: true})
+      this.getOrderItem()
+    }
+  }
 
   render() {
     const { classes } = this.props
     const {
+      confirmRows,
       associate,
       loading,
       info,
@@ -375,6 +365,7 @@ class Worksheet extends React.Component {
       descript,
       itemno,
       model,
+      permission,
     } = this.state
     if (rows.length > 0) {
       rows.forEach((row, index) => {
@@ -428,19 +419,31 @@ class Worksheet extends React.Component {
               columns={columns}
               rows={rows}
               columnWidths={columnWidths}
+              changeWidths={this.changeWidths}
               selection={selection}
               onSelectionChange={this.changeSelection}
             />
             {loading && <Loading />}
             <Grid container spacing={24}>
               <Grid item xs={12}>
-                <Button
-                  className={classes.button}
-                  variant="contained"
-                  onClick={this.setOrderTemplate}
+                <Tooltip
+                  title={
+                    permission
+                      ? 'Confirm Worksheet'
+                      : "You don't have permission to do this"
+                  }
                 >
-                  Confirm
-                </Button>
+                  <span>
+                    <Button
+                      className={classes.button}
+                      variant="contained"
+                      onClick={this.setOrderTemplate}
+                      disabled={!permission}
+                    >
+                      Confirm
+                    </Button>
+                  </span>
+                </Tooltip>
               </Grid>
               <Grid item xs={2}>
                 <FormControlLabel
@@ -449,8 +452,10 @@ class Worksheet extends React.Component {
                       checked={associate}
                       onChange={this.handleSwitch('associate')}
                       color="primary"
-                    />}
-                  label='Associate?'/>
+                    />
+                  }
+                  label="Associate?"
+                />
               </Grid>
               <Grid item xs={2}>
                 <FormControl className={classes.formControl}>
@@ -535,6 +540,16 @@ class Worksheet extends React.Component {
                 </Button>
               </Grid>
             </Grid>
+            <Typography
+              component="h1"
+              variant="h6"
+              color="inherit"
+              noWrap
+              className={classes.title}
+            >
+              Confirm Components
+            </Typography>
+            <ConfirmTable rows={confirmRows} columns={confirm_columns}/>
           </Typography>
           <MyDialog
             open={info}

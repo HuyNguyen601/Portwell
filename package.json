@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "author": "Huy Nguyen <giahuy601@gmail.com",
   "dependencies": {
+    "@date-io/moment": "^1.1.0",
     "@devexpress/dx-react-core": "^1.10.0",
     "@devexpress/dx-react-grid": "^1.10.0",
     "@devexpress/dx-react-grid-material-ui": "^1.10.0",
@@ -25,6 +26,7 @@
     "jsbarcode": "^4.0.0-alpha.5",
     "jspdf": "^1.5.3",
     "jspdf-autotable": "^3.0.13",
+    "material-ui-pickers": "^2.2.4",
     "moment": "^2.24.0",
     "places.js": "^1.15.1",
     "prop-types": "^15.6.2",
@@ -39,7 +41,8 @@
     "react-jss": "^8.6.1",
     "react-typography": "^0.16.18",
     "typography": "^0.16.18",
-    "typography-theme-ocean-beach": "^0.16.18"
+    "typography-theme-ocean-beach": "^0.16.18",
+    "xlsx": "^0.14.2"
   },
   "keywords": [
     "gatsby"

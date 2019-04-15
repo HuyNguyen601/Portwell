@@ -3,16 +3,34 @@ import Layout from '../components/layout'
 import { withStyles } from '@material-ui/core/styles'
 import SEO from '../components/seo'
 import { getUser } from '../services/auth'
-import {TextField, Typography, Button, Paper} from '@material-ui/core'
-import {Table, TableHeaderRow, Grid, TableColumnResizing} from '@devexpress/dx-react-Grid-material-ui'
+import {
+  TextField,
+  Typography,
+  Button,
+  Paper,
+  Tooltip,
+  InputAdornment,
+} from '@material-ui/core'
+import { CheckCircle, Error } from '@material-ui/icons'
+import {
+  Table,
+  TableHeaderRow,
+  Grid,
+  TableColumnResizing,
+} from '@devexpress/dx-react-Grid-material-ui'
 import ColumnGrid from '@material-ui/core/Grid'
-import {MyDialog} from '../components/MyDialog'
-
+import { MyDialog } from '../components/MyDialog'
 //axios to handle xmlhttp request
 import axios from 'axios'
 import qs from 'qs'
 import { common_url } from '../config/config'
 
+const style = {
+  customCell: {
+    whiteSpace: 'normal',
+    wordWrap: 'break-word',
+  },
+}
 const styles = theme => ({
   appBarSpacer: theme.mixins.toolbar,
   content: {
@@ -41,28 +59,41 @@ const styles = theme => ({
   },
 })
 
-const columns = [{
+const CustomTableCellBase = ({ classes, ...restProps }) => (
+  <Table.Cell className={classes.customCell} {...restProps} />
+)
+
+export const CustomTableCell = withStyles(style)(CustomTableCellBase)
+
+const columns = [
+  {
     name: 'type',
-    title: 'Type'
-  }, {
+    title: 'Type',
+  },
+  {
     name: 'descript',
-    title: 'Description'
-  }, {
+    title: 'Description',
+  },
+  {
     name: 'itemno',
-    title: 'Part No'
-  }, {
+    title: 'Part No',
+  },
+  {
     name: 'model',
-    title: 'Model'
-  }, {
+    title: 'Model',
+  },
+  {
     name: 'qty',
-    title: 'Qty'
-  }, {
+    title: 'Qty',
+  },
+  {
     name: 'seq',
-    title: 'Seq'
-  }, {
+    title: 'Seq',
+  },
+  {
     name: 'sn_input',
-    title: 'Serial Number'
-  }
+    title: 'Serial Number',
+  },
 ]
 
 const getTemplate = async uid => {
@@ -81,13 +112,17 @@ const getTemplate = async uid => {
   }
 }
 
-const saveSNCollection = async(uid,array)=>{
+const saveSNCollection = async (uid, array) => {
   try {
     const response = await axios.post(
       common_url,
       qs.stringify({
         id: 'developer',
-        jsonMeta: JSON.stringify({ act: 'saveSNCollection', user: getUser().user_id, location: getUser().location }),
+        jsonMeta: JSON.stringify({
+          act: 'saveSNCollection',
+          user: getUser().user_id,
+          location: getUser().location,
+        }),
         jsonData: JSON.stringify({ search_text: uid, search_array: array }),
       })
     )
@@ -96,13 +131,17 @@ const saveSNCollection = async(uid,array)=>{
     console.log(error)
   }
 }
-const resetAllSN = async uid=>{
+const resetAllSN = async uid => {
   try {
     const response = await axios.post(
       common_url,
       qs.stringify({
         id: 'developer',
-        jsonMeta: JSON.stringify({ act: 'resetSN', user: getUser().user_id, location: getUser().location }),
+        jsonMeta: JSON.stringify({
+          act: 'resetSN',
+          user: getUser().user_id,
+          location: getUser().location,
+        }),
         jsonData: JSON.stringify({ uid: uid }),
       })
     )
@@ -112,11 +151,11 @@ const resetAllSN = async uid=>{
   }
 }
 
-
 class SnScan extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      permission: !!getUser().user_id,
       //for dialogs
       info: false,
       reset: false,
@@ -125,11 +164,15 @@ class SnScan extends React.Component {
       columnWidths: [
         {
           columnName: 'type',
-          width: 100,
+          width: 140,
         },
         {
           columnName: 'descript',
-          width: 250,
+          width: 200,
+        },
+        {
+          columnName: 'sn_input',
+          width: 200,
         },
         {
           columnName: 'itemno',
@@ -137,7 +180,7 @@ class SnScan extends React.Component {
         },
         {
           columnName: 'model',
-          width: 250,
+          width: 200,
         },
         {
           columnName: 'qty',
@@ -147,67 +190,113 @@ class SnScan extends React.Component {
           columnName: 'seq',
           width: 80,
         },
-        {
-          columnName: 'sn_input',
-          width: 250,
-        },
       ],
       uid: !!this.props.location.state ? this.props.location.state.uid : '',
       rows: [],
     }
+    this.sn_input = []
+    this.changeWidths = columnWidths => this.setState({ columnWidths })
     this.handleInput = type => e => this.setState({ [type]: e.target.value })
+    this.handleClose = type => e => this.setState({ [type]: false })
+    this.handleSN = this.handleSN.bind(this)
+    this.checkSN = this.checkSN.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
-    this.handleClose = type => e => this.setState({[type]: false})
-    this.handleSN = index=>e=>{
-      const rows = this.state.rows
-      rows[index].sn = e.target.value
-      this.setState({rows})
-    }
     this.saveSN = this.saveSN.bind(this)
     this.resetSN = this.resetSN.bind(this)
     this.handleReset = this.handleReset.bind(this)
   }
-  saveSN = ()=>{
+
+  handleSN = index => e => {
     const rows = this.state.rows
-    rows.forEach(row=>{delete row.sn_input})
-    saveSNCollection(this.state.uid, rows).then(response=>{
-      const total = response.data.insert ? response.data.insert : response.data.update
-      const message = 'Successfully ' + (response.data.insert ? 'insert ' : 'update ') + total + ' serial numbers!'
-      this.setState({info: true, message})
+    const row = rows[index]
+    //for MAC Address
+    if (row.type.includes('MAC')) {
+      const mac = e.target.value.toUpperCase()
+      const lastChar = mac.charAt(mac.length - 1)
+      if ((/[0-9A-F]/.test(lastChar) || lastChar === '') && mac.length <= 12) {
+        row.sn = mac
+      }
+    } else {
+      row.sn = e.target.value
+    }
+    this.setState({ rows })
+  }
+  checkSN = index => e => {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      const rows = this.state.rows
+      const row = rows[index]
+      const next = index === rows.length - 1 ? index : index + 1
+      //for MAC Address
+      if (row.type.includes('MAC')) {
+        if (row.sn.length !== 12 && row.sn.length !== 0) {
+          row.error = true
+          row.success = false
+        } else {
+          row.error = false
+          row.success = true
+          this.sn_input[next].focus()
+        }
+      } else {
+        row.success = true
+        this.sn_input[next].focus()
+      }
+      this.setState({ rows })
+    }
+  }
+  saveSN = () => {
+    const rows = this.state.rows
+    rows.forEach(row => {
+      delete row.sn_input
+    })
+    saveSNCollection(this.state.uid, rows).then(response => {
+      const total = response.data.insert
+        ? response.data.insert
+        : response.data.update
+      const message =
+        'Successfully ' +
+        (response.data.insert ? 'insert ' : 'update ') +
+        total +
+        ' serial numbers!'
+      this.setState({ info: true, message })
     })
   }
-  resetSN = ()=>{
+  resetSN = () => {
     const message = 'Are you sure to reset all serial numbers for this UID?'
-    this.setState({reset: true, message})
+    this.setState({ reset: true, message })
   }
-  handleReset = e=>{
-    this.setState({reset: false})
-    resetAllSN(this.state.uid).then(response=>{
-      if(response.data.insert || response.data.delete){
+  handleReset = e => {
+    this.setState({ reset: false })
+    resetAllSN(this.state.uid).then(response => {
+      if (response.data.insert || response.data.delete) {
         this.handleSubmit(e)
       }
     })
-
   }
 
-  handleSubmit = e=>{
+  handleSubmit = e => {
     e.preventDefault()
-    getTemplate(this.state.uid).then(response=>{
-      if(response.data.total>0){
-          const rows = response.data.rows
-          this.setState({rows})
-      } else { //show dialog
-        this.setState({rows: []})
+    getTemplate(this.state.uid).then(response => {
+      if (response.data.total > 0) {
+        const rows = response.data.rows
+        this.setState({ rows })
+      } else {
+        //show dialog
+        this.setState({
+          rows: [],
+          info: true,
+          message: 'No worksheet with this UID',
+        })
       }
     })
   }
-  componentDidMount(props){
-    getTemplate(this.state.uid).then(response=>{
-      if(response.data.total>0){
-          const rows = response.data.rows
-          this.setState({rows})
-      } else { //show dialog
-        this.setState({rows: []})
+  componentDidMount(props) {
+    getTemplate(this.state.uid).then(response => {
+      if (response.data.total > 0) {
+        const rows = response.data.rows
+        this.setState({ rows })
+      } else {
+        //show dialog
+        this.setState({ rows: [] })
       }
     })
   }
@@ -220,18 +309,33 @@ class SnScan extends React.Component {
       reset,
       rows,
       columnWidths,
+      permission,
     } = this.state
     const { classes } = this.props
-    rows.forEach((row,index)=>{
-      row.sn_input = <TextField value={row.sn} key={row.itemno+index} onChange={this.handleSN(index)} />
-    })
-
-    return (
-      <Layout title='SN Scan'>
-        <SEO
-          title="SN Scan"
-          keywords={[`gatsby`, `application`, `react`]}
+    rows.forEach((row, index) => {
+      row.sn = !!row.sn ? row.sn : ''
+      row.sn_input = (
+        <TextField
+          value={row.sn}
+          key={row.itemno + index}
+          onChange={this.handleSN(index)}
+          onKeyPress={this.checkSN(index)}
+          error={row.error}
+          inputRef={el=>this.sn_input[index] = el}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                {row.error && <Error color='secondary'/>}
+                {row.success && <CheckCircle color='primary'/>}
+              </InputAdornment>
+            ),
+          }}
         />
+      )
+    })
+    return (
+      <Layout title="SN Scan">
+        <SEO title="SN Scan" keywords={[`gatsby`, `application`, `react`]} />
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           <Typography
@@ -261,34 +365,56 @@ class SnScan extends React.Component {
           <Typography component="div" className={classes.tableContainer}>
             <Paper>
               <Grid columns={columns} rows={rows}>
-                <Table/>
+                <Table cellComponent={CustomTableCell} />
                 <TableColumnResizing
-                    columnWidths={columnWidths}
+                  columnWidths={columnWidths}
+                  onColumnWidthsChange={this.changeWidths}
                 />
-                <TableHeaderRow/>
+                <TableHeaderRow />
               </Grid>
             </Paper>
             <ColumnGrid container spacing={24}>
               <ColumnGrid item xs={10}>
-                <Button
-                  className={classes.button}
-                  variant="contained"
-                  onClick={this.resetSN}
-                  color='secondary'
-                  disabled = {rows.length===0}
+                <Tooltip
+                  title={
+                    permission
+                      ? 'Reset to new template'
+                      : "You don't have permission to do this"
+                  }
                 >
-                  Reset All
-                </Button>
+                  <span>
+                    <Button
+                      className={classes.button}
+                      variant="contained"
+                      onClick={this.resetSN}
+                      color="secondary"
+                      disabled={rows.length === 0 || !permission}
+                    >
+                      Reset All
+                    </Button>
+                  </span>
+                </Tooltip>
               </ColumnGrid>
               <ColumnGrid item xs={2}>
-                <Button
-                  className={classes.button}
-                  variant="contained"
-                  onClick={this.saveSN}
-                  color='primary'
+                <Tooltip
+                  title={
+                    permission
+                      ? 'Save Serial Numbers'
+                      : "You don't have permission to do this"
+                  }
                 >
-                  Save SN
-                </Button>
+                  <span>
+                    <Button
+                      className={classes.button}
+                      variant="contained"
+                      onClick={this.saveSN}
+                      color="primary"
+                      disabled={rows.length === 0 || !permission}
+                    >
+                      Save SN
+                    </Button>
+                  </span>
+                </Tooltip>
               </ColumnGrid>
             </ColumnGrid>
           </Typography>

@@ -11,7 +11,7 @@ import {Grid, Table, TableHeaderRow} from '@devexpress/dx-react-grid-material-ui
 import {Link} from 'gatsby'
 
 import OrderInfo from '../components/OrderInfo'
-import Loading from '../components/Loading'
+import {Loading} from '../components/Loading'
 
 
 import axios from 'axios'
@@ -112,7 +112,7 @@ class Unit extends React.Component {
               : state.qty_mr
             state.qty_remain = state.qty_order - state.qty_mr
             state.rows = rows
-            state.order_no = <Link to='/orderDetail' state={{id: order_id, uid: this.state.uid, station: station}}> {state.order_no}</Link>
+            state.order_no = <Link to='/orderDetail' state={{id: order_id, search: this.state.uid}}> {state.order_no}</Link>
             this.setState(state)
           } else {
             this.setState({item_no: '', cust_code: '', qty_order: 0, qty_mr: 0, qty_remain: 0})

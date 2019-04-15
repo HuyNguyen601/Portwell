@@ -63,7 +63,6 @@ class RemoteTable extends React.Component {
           loading: true
         })
         const state = this.state
-        state.currentPage = 0 //set to first page when move to another station
         this.props.getData(state, this.props).then(()=>{
           this.setState({loading: false})
         })
@@ -76,7 +75,6 @@ class RemoteTable extends React.Component {
           loading: true
         })
         const state = this.state
-        state.currentPage = 0 //set to first page
         this.props.getData(state, this.props).then(()=>{
           this.setState({loading: false})
         })
@@ -109,6 +107,7 @@ class RemoteTable extends React.Component {
       columns,
       totalCount,
       columnWidths,
+      changeColumnWidths,
       selection
     } = this.props
     return (<Paper style={{
@@ -136,12 +135,13 @@ class RemoteTable extends React.Component {
         <Table/>
         <TableColumnResizing
             columnWidths={columnWidths}
+            onColumnWidthsChange={changeColumnWidths}
         />
 
         <TableHeaderRow showSortingControls/>
 
         <TableSelection
-            selectByRowClick
+            //selectByRowClick
             highlightRow
             showSelectionColumn={false}
             //showSelectAll

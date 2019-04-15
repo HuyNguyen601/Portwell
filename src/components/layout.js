@@ -13,7 +13,7 @@ import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import {Person} from '@material-ui/icons';
-import { mainListItems, secondaryListItems, thirdListItems } from './listItems';
+import { mainListItems, secondaryListItems, thirdListItems, travelerItem } from './listItems';
 
 import {styles} from '../utils/styles'
 import {isLoggedIn, getUser, logout} from '../services/auth'
@@ -43,8 +43,8 @@ class Layout extends React.Component {
   }
 
   render() {
-    const { classes, title} = this.props;
-
+    const { classes} = this.props;
+    const title = !!this.props.title ? this.props.title : ''
     return (
       <div className={classes.root}>
         <CssBaseline />
@@ -97,7 +97,7 @@ class Layout extends React.Component {
           <Divider />
           <List>{secondaryListItems}</List>
           <Divider />
-          <List>{thirdListItems}</List>
+          <List>{travelerItem}</List>
         </Drawer>
         {this.props.children}
 
