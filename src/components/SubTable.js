@@ -223,7 +223,8 @@ class SubTable extends React.Component {
                 </tr>
                 <tr>
                   <th style={{ width: '150px' }}>
-                    <span style={{ textDecoration: 'underline' }}>From:</span>{' '}
+                    {//<span style={{ textDecoration: 'underline' }}>From:</span>{' '}
+                    }
                     Portwell{' '}
                   </th>
                   <th>
@@ -273,7 +274,7 @@ class SubTable extends React.Component {
                   <th style={{ textDecoration: 'underline' }}>UID #:</th>
                   <th>{<Barcode
                       value={rows[index].apt_id}
-                      width={1}
+                      width={1.5}
                       height= {20}
                       fontOptions= 'bold'
                       font= "san serif"

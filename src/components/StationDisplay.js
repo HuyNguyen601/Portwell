@@ -2,7 +2,6 @@ import React from 'react'
 import Tabs from '@material-ui/core/Tabs'
 import Tab from '@material-ui/core/Tab'
 import Paper from '@material-ui/core/Paper'
-import StationTable from './StationTable'
 import MRTable from './MRTable'
 import Badge from '@material-ui/core/Badge'
 import { TextField, Tooltip } from '@material-ui/core'
@@ -57,6 +56,8 @@ const toStation = value => {
       ? 'Assembly'
       : value === 2
       ? 'Burn In'
+      : value === 3
+      ? 'Testing'
       : 'Packing'
   return station
 }
@@ -126,6 +127,7 @@ class StationDisplay extends React.Component {
       mr: 0, //Material Receiving qty
       as: 0, // Assembly qty
       bi: 0, //Burn In qty
+      ts: 0, // Testing qty
       pk: 0, //packing qty
       newQty: 0,
       deleteIds: [],
@@ -210,6 +212,7 @@ class StationDisplay extends React.Component {
             mr: 0,
             bi: 0,
             as: 0,
+            ts: 0,
             pk: 0,
           }
           rows.forEach(row => {
@@ -222,6 +225,9 @@ class StationDisplay extends React.Component {
                 break
               case 'Burn In':
                 temp.bi = row.qty
+                break
+              case 'Testing':
+                temp.ts = row.qty
                 break
               case 'Packing':
                 temp.pk = row.qty
@@ -237,6 +243,7 @@ class StationDisplay extends React.Component {
             mr: 0,
             bi: 0,
             as: 0,
+            ts: 0,
             pk: 0,
             update: !this.state.update,
           })
@@ -254,6 +261,7 @@ class StationDisplay extends React.Component {
             mr: 0,
             bi: 0,
             as: 0,
+            ts: 0,
             pk: 0,
           }
           rows.forEach(row => {
@@ -266,6 +274,9 @@ class StationDisplay extends React.Component {
                 break
               case 'Burn In':
                 temp.bi = row.qty
+                break
+              case 'Testing':
+                temp.ts = row.qty
                 break
               case 'Packing':
                 temp.pk = row.qty
@@ -280,6 +291,7 @@ class StationDisplay extends React.Component {
             mr: 0,
             bi: 0,
             as: 0,
+            ts: 0,
             pk: 0,
           })
         }
@@ -293,6 +305,7 @@ class StationDisplay extends React.Component {
       mr,
       as,
       bi,
+      ts,
       pk,
       generate,
       newQty,
@@ -346,6 +359,18 @@ class StationDisplay extends React.Component {
                 color="primary"
               >
                 Burn In
+              </Badge>
+            }
+          />
+          <Tab
+            label={
+              <Badge
+                className={classes.padding}
+                badgeContent={ts}
+                max={999}
+                color="primary"
+              >
+                Testing
               </Badge>
             }
           />
